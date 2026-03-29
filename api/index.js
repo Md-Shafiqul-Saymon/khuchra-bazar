@@ -1,12 +1,14 @@
-const { createApp } = require('../dist/main');
+const path = require('path');
 
-let appPromise;
+let handler;
 
 module.exports = async (req, res) => {
-  if (!appPromise) {
-    appPromise = createApp();
+  if (!handler) {
+    // Dynamic path prevents Vercel's nft tracer from following into dist/ at build time
+    const mainPath = path.join(process.cwd(), 'dist', 'main');
+    const { createApp } = require(mainPath);
+    const app = await createApp();
+    handler = app.getHttpAdapter().getInstance();
   }
-  const app = await appPromise;
-  const expressInstance = app.getHttpAdapter().getInstance();
-  return expressInstance(req, res);
+  return handler(req, res);
 };

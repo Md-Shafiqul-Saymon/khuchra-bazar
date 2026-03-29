@@ -4,8 +4,9 @@
   "installCommand": "npm install",
   "functions": {
     "api/index.js": {
-      "maxDuration": 30,
-      "includeFiles": "{dist,views,public}/**"
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": ["dist/**", "views/**", "public/**", "node_modules/**"]
     }
   },
   "rewrites": [
