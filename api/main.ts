@@ -3,12 +3,15 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
-import { AppModule } from './app.module';
-import { GlobalExceptionFilter } from './common/http-exception.filter';
+import { AppModule } from '../src/app.module';
+import { GlobalExceptionFilter } from '../src/common/http-exception.filter';
 
-async function bootstrap() {
+let cachedApp: NestExpressApplication;
+
+async function createApp(): Promise<NestExpressApplication> {
+  if (cachedApp) return cachedApp;
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
   app.use(compression());
   app.use(cookieParser());
   app.set('trust proxy', true);
@@ -23,8 +26,13 @@ async function bootstrap() {
     etag: true,
   });
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`খুচরা বাজার running on http://localhost:${port}`);
+  await app.init();
+  cachedApp = app;
+  return app;
 }
-bootstrap();
+
+export default async function handler(req: any, res: any) {
+  const app = await createApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
+}

@@ -3,13 +3,13 @@
   "buildCommand": "npm run tailwind:build",
   "installCommand": "npm install",
   "functions": {
-    "src/main.ts": {
+    "api/main.ts": {
       "maxDuration": 60,
       "memory": 1024,
       "includeFiles": "{views,public}/**"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/src/main" }
+    { "source": "/(.*)", "destination": "/api/main" }
   ]
 }
