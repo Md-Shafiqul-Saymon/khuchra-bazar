@@ -8,7 +8,7 @@ import { GlobalExceptionFilter } from './common/http-exception.filter';
 
 let cachedApp: NestExpressApplication;
 
-export async function createApp(): Promise<NestExpressApplication> {
+async function createApp(): Promise<NestExpressApplication> {
   if (cachedApp) return cachedApp;
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -32,13 +32,19 @@ export async function createApp(): Promise<NestExpressApplication> {
   return app;
 }
 
-async function bootstrap() {
+// Vercel serverless handler — this is the default export Vercel expects
+export default async function handler(req: any, res: any) {
   const app = await createApp();
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`খুচরা বাজার running on http://localhost:${port}`);
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
 }
 
+// Local development — only runs when executed directly
 if (require.main === module) {
-  bootstrap();
+  (async () => {
+    const app = await createApp();
+    const port = process.env.PORT || 3000;
+    await app.listen(port);
+    console.log(`খুচরা বাজার running on http://localhost:${port}`);
+  })();
 }

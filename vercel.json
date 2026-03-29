@@ -1,15 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm run tailwind:build",
   "installCommand": "npm install",
   "functions": {
-    "api/index.js": {
+    "src/main.ts": {
       "maxDuration": 60,
       "memory": 1024,
-      "includeFiles": ["dist/**", "views/**", "public/**", "node_modules/**"]
+      "includeFiles": ["views/**", "public/**"]
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
+    { "source": "/(.*)", "destination": "/src/main" }
   ]
 }
