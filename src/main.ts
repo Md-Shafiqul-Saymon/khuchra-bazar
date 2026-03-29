@@ -6,26 +6,39 @@ import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/http-exception.filter';
 
-async function bootstrap() {
+let cachedApp: NestExpressApplication;
+
+export async function createApp(): Promise<NestExpressApplication> {
+  if (cachedApp) return cachedApp;
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(compression());
   app.use(cookieParser());
   app.set('trust proxy', true);
-
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  app.setBaseViewsDir(join(__dirname, '..', 'views'));
+  const rootDir = join(__dirname, '..');
+  app.setBaseViewsDir(join(rootDir, 'views'));
   app.setViewEngine('ejs');
-
-  app.useStaticAssets(join(__dirname, '..', 'public'), {
+  app.useStaticAssets(join(rootDir, 'public'), {
     prefix: '/',
     maxAge: '7d',
     etag: true,
   });
 
+  await app.init();
+  cachedApp = app;
+  return app;
+}
+
+async function bootstrap() {
+  const app = await createApp();
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`খুচরা বাজার running on http://localhost:${port}`);
 }
-bootstrap();
+
+if (require.main === module) {
+  bootstrap();
+}
