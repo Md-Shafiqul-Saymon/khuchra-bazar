@@ -6,7 +6,7 @@
     "src/main.ts": {
       "maxDuration": 60,
       "memory": 1024,
-      "includeFiles": ["views/**", "public/**"]
+      "includeFiles": "{views,public}/**"
     }
   },
   "rewrites": [
