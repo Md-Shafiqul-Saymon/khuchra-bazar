@@ -1,0 +1,31 @@
+<div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group">
+  <a href="/product/<%= product.slug %>" class="block">
+    <div class="aspect-square overflow-hidden bg-gray-100">
+      <% if (product.images && product.images.length) { %>
+      <img src="<%= product.images[0] %>" alt="<%= product.name %>" loading="lazy"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+      <% } else { %>
+      <div class="w-full h-full flex items-center justify-center text-gray-300">
+        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <% } %>
+    </div>
+    <div class="p-3">
+      <h3 class="text-sm font-medium text-gray-800 line-clamp-2 mb-1.5"><%= product.name %></h3>
+      <div class="flex items-center gap-2">
+        <% if (product.discountPrice) { %>
+        <span class="text-rose-600 font-bold">৳ <%= product.discountPrice %></span>
+        <span class="text-gray-400 text-sm line-through">৳ <%= product.price %></span>
+        <% } else { %>
+        <span class="text-rose-600 font-bold">৳ <%= product.price %></span>
+        <% } %>
+      </div>
+    </div>
+  </a>
+  <div class="px-3 pb-3">
+    <button onclick="addToCart('<%= product._id %>')"
+      class="w-full bg-rose-600 hover:bg-rose-700 text-white text-sm py-2 rounded-lg transition font-medium">
+      কার্টে যোগ করুন
+    </button>
+  </div>
+</div>

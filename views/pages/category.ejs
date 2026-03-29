@@ -1,0 +1,30 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <h1 class="text-xl font-bold text-gray-800 mb-4"><%= category.name %> (<%= total %> টি পণ্য)</h1>
+
+  <% if (products && products.length) { %>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+    <% products.forEach(function(product) { %>
+      <%- include('../partials/product-card', { product }) %>
+    <% }); %>
+  </div>
+  <% if (pages > 1) { %>
+  <div class="flex justify-center gap-2 mt-8">
+    <% for (let i = 1; i <= pages; i++) { %>
+    <a href="/category/<%= category.slug %>?page=<%= i %>"
+      class="px-4 py-2 rounded-lg text-sm font-medium transition
+      <%= i === currentPage ? 'bg-rose-600 text-white' : 'bg-white text-gray-600 hover:bg-rose-50 border' %>">
+      <%= i %>
+    </a>
+    <% } %>
+  </div>
+  <% } %>
+  <% } else { %>
+  <div class="text-center py-20 text-gray-400">
+    <p class="text-lg">এই ক্যাটাগরিতে কোনো পণ্য নেই</p>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

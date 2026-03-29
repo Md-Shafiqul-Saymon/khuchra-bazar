@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <% if (settings?.bannerImages && settings.bannerImages.length) { %>
+  <div x-data="{ current: 0, images: <%- JSON.stringify(settings.bannerImages) %> }"
+    x-init="setInterval(() => current = (current + 1) % images.length, 5000)"
+    class="relative rounded-2xl overflow-hidden mb-8 aspect-[3/1] bg-gray-200">
+    <template x-for="(img, i) in images" :key="i">
+      <img :src="img" x-show="current === i" x-transition:enter="transition ease-out duration-500"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+    </template>
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      <template x-for="(img, i) in images" :key="'dot-'+i">
+        <button @click="current = i" :class="current === i ? 'bg-white' : 'bg-white/50'"
+          class="w-2.5 h-2.5 rounded-full transition"></button>
+      </template>
+    </div>
+  </div>
+  <% } else { %>
+  <div class="rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 text-white p-8 md:p-12 mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold mb-2">খুচরা বাজারে স্বাগতম!</h1>
+    <p class="text-lg opacity-90">সেরা মানের পণ্য, সেরা দামে। সারা দেশে হোম ডেলিভারি।</p>
+  </div>
+  <% } %>
+
+  <% if (flashSale && flashSale.length) { %>
+  <section class="mb-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+        <span class="text-rose-600">⚡</span> ফ্ল্যাশ সেল
+      </h2>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+      <% flashSale.forEach(function(product) { %>
+        <%- include('../partials/product-card', { product }) %>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <section>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold text-gray-800">সকল পণ্য</h2>
+      <span class="text-sm text-gray-500">মোট <%= total %> টি পণ্য</span>
+    </div>
+
+    <% if (products && products.length) { %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+      <% products.forEach(function(product) { %>
+        <%- include('../partials/product-card', { product }) %>
+      <% }); %>
+    </div>
+
+    <% if (pages > 1) { %>
+    <div class="flex justify-center gap-2 mt-8">
+      <% for (let i = 1; i <= pages; i++) { %>
+      <a href="/?page=<%= i %>"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition
+        <%= i === currentPage ? 'bg-rose-600 text-white' : 'bg-white text-gray-600 hover:bg-rose-50 border' %>">
+        <%= i %>
+      </a>
+      <% } %>
+    </div>
+    <% } %>
+    <% } else { %>
+    <div class="text-center py-20 text-gray-400">
+      <p class="text-lg">এখনো কোনো পণ্য যোগ করা হয়নি</p>
+    </div>
+    <% } %>
+  </section>
+</div>
+
+<%- include('../partials/footer') %>

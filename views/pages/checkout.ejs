@@ -1,0 +1,120 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-6xl mx-auto px-4 py-6" x-data="checkoutPage()">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">অর্ডার কনফার্ম করুন</h1>
+
+  <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6 text-sm text-rose-700">
+    অর্ডার করতে আপনার সম্পূর্ণ নাম, মোবাইল নম্বর ও ঠিকানা দিয়ে <strong>অর্ডার কনফার্ম করুন</strong> বাটনে ক্লিক করুন।
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <div class="mb-5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">আপনার নাম *</label>
+          <input type="text" x-model="form.customerName" placeholder="আপনার সম্পূর্ণ নাম লিখুন"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500">
+        </div>
+
+        <div class="mb-5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">আপনার মোবাইল *</label>
+          <div class="flex">
+            <span class="bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl px-3 flex items-center text-gray-500 text-sm">+88</span>
+            <input type="tel" x-model="form.customerPhone" placeholder="০১XXXXXXXXX"
+              class="flex-1 border border-gray-300 rounded-r-xl px-4 py-2.5 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500">
+          </div>
+        </div>
+
+        <div class="mb-5">
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">আপনার ঠিকানা *</label>
+          <textarea x-model="form.customerAddress" rows="3"
+            placeholder="আপনার সম্পূর্ণ ঠিকানা (যেমন: বাসা, এলাকা, থানা, জেলা)"
+            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">ডেলিভারি এরিয়া *</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'dhaka-inside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="dhaka-inside" class="text-rose-600">
+              <span>ঢাকার ভিতরে (৳ <%= settings?.deliveryChargeDhakaInside || 130 %>)</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'dhaka-outside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="dhaka-outside" class="text-rose-600">
+              <span>ঢাকার বাইরে (সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) (৳ <%= settings?.deliveryChargeDhakaOutside || 100 %>)</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'express' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="express" class="text-rose-600">
+              <span>এক্সপ্রেস ডেলিভারি (৳ <%= settings?.deliveryChargeExpress || 60 %>)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">আপনার অর্ডার</h2>
+
+        <div class="border rounded-xl overflow-hidden mb-4">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="text-left p-2.5 font-medium">পণ্য</th>
+                <th class="text-right p-2.5 font-medium">মূল্য</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% cart.items.forEach(function(item) { %>
+              <tr class="border-t">
+                <td class="p-2.5">
+                  <div class="flex items-center gap-2">
+                    <img src="<%= item.image %>" alt="" class="w-10 h-10 rounded object-cover">
+                    <div>
+                      <p class="line-clamp-1"><%= item.name %></p>
+                      <p class="text-xs text-gray-500">x<%= item.quantity %></p>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-2.5 text-right font-medium">৳ <%= item.lineTotal %></td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="space-y-2 text-sm mb-4">
+          <div class="flex justify-between"><span>সাবটোটাল</span><span class="font-medium text-rose-600">৳ <%= cart.subtotal %></span></div>
+          <div class="flex justify-between"><span>ডেলিভারি চার্জ</span><span class="font-medium" x-text="'৳ ' + deliveryCharge"></span></div>
+          <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+            <span>মোট</span>
+            <span class="text-rose-600" x-text="'৳ ' + (<%= cart.subtotal %> + deliveryCharge)"></span>
+          </div>
+        </div>
+
+        <button @click="placeOrder()" :disabled="loading"
+          class="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-gray-400 text-white py-3 rounded-xl font-semibold transition text-lg">
+          <span x-show="!loading">অর্ডার কনফার্ম করুন</span>
+          <span x-show="loading">অপেক্ষা করুন...</span>
+        </button>
+
+        <template x-if="error">
+          <p class="text-red-600 text-sm mt-2 text-center" x-text="error"></p>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DELIVERY_CHARGES = {
+    'dhaka-inside': <%= settings?.deliveryChargeDhakaInside || 130 %>,
+    'dhaka-outside': <%= settings?.deliveryChargeDhakaOutside || 100 %>,
+    'express': <%= settings?.deliveryChargeExpress || 60 %>,
+  };
+</script>
+
+<%- include('../partials/footer') %>

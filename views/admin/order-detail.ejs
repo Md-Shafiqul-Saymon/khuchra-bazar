@@ -1,0 +1,68 @@
+<%- include('partials/sidebar', { pageTitle: 'Order ' + order.orderNumber }) %>
+
+<div x-data="{ status: '<%= order.status %>' }">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Order #<%= order.orderNumber %></h1>
+    <a href="/admin/orders" class="text-sm text-gray-500 hover:text-gray-700">&larr; Back to Orders</a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-semibold mb-4">Order Items</h2>
+        <div class="space-y-3">
+          <% order.items.forEach(function(item) { %>
+          <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+            <% if (item.image) { %>
+            <img src="<%= item.image %>" alt="" class="w-14 h-14 rounded-lg object-cover">
+            <% } %>
+            <div class="flex-1">
+              <p class="font-medium"><%= item.name %></p>
+              <p class="text-sm text-gray-500">৳<%= item.price %> x <%= item.quantity %></p>
+            </div>
+            <p class="font-bold">৳ <%= item.price * item.quantity %></p>
+          </div>
+          <% }); %>
+        </div>
+
+        <div class="border-t mt-4 pt-4 space-y-2 text-sm">
+          <div class="flex justify-between"><span>Subtotal</span><span class="font-medium">৳ <%= order.subtotal %></span></div>
+          <div class="flex justify-between"><span>Delivery (<%= order.deliveryArea %>)</span><span class="font-medium">৳ <%= order.deliveryCharge %></span></div>
+          <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span class="text-rose-600">৳ <%= order.total %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-semibold mb-4">Customer Info</h2>
+        <div class="space-y-3 text-sm">
+          <div><span class="text-gray-500">Name</span><p class="font-medium"><%= order.customerName %></p></div>
+          <div><span class="text-gray-500">Phone</span><p class="font-medium"><%= order.customerPhone %></p></div>
+          <div><span class="text-gray-500">Address</span><p class="font-medium"><%= order.customerAddress %></p></div>
+          <div><span class="text-gray-500">Date</span><p class="font-medium"><%= new Date(order.createdAt).toLocaleString('bn-BD') %></p></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h2 class="font-semibold mb-4">Update Status</h2>
+        <select x-model="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-rose-500">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <button @click="
+          fetch('/api/orders/<%= order._id %>/status', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getCookie('admin_token') },
+            body: JSON.stringify({ status })
+          }).then(() => window.location.reload())
+        " class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg text-sm font-medium transition">Update Status</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/end') %>

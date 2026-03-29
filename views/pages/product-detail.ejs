@@ -1,0 +1,102 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <div class="bg-white rounded-2xl shadow-sm p-4 md:p-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+      <div x-data="{ selected: 0 }">
+        <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-3">
+          <% if (product.images && product.images.length) { %>
+          <% product.images.forEach(function(img, i) { %>
+          <img src="<%= img %>" alt="<%= product.name %>" x-show="selected === <%= i %>"
+            class="w-full h-full object-contain" loading="<%= i === 0 ? 'eager' : 'lazy' %>">
+          <% }); %>
+          <% } else { %>
+          <div class="w-full h-full flex items-center justify-center text-gray-300">
+            <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+          <% } %>
+        </div>
+        <% if (product.images && product.images.length > 1) { %>
+        <div class="flex gap-2 overflow-x-auto pb-2">
+          <% product.images.forEach(function(img, i) { %>
+          <button @click="selected = <%= i %>"
+            :class="selected === <%= i %> ? 'ring-2 ring-rose-500' : 'ring-1 ring-gray-200'"
+            class="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+            <img src="<%= img %>" alt="" class="w-full h-full object-cover" loading="lazy">
+          </button>
+          <% }); %>
+        </div>
+        <% } %>
+      </div>
+
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3"><%= product.name %></h1>
+        <% if (product.nameEn) { %><p class="text-gray-500 mb-3"><%= product.nameEn %></p><% } %>
+
+        <div class="flex items-baseline gap-3 mb-4">
+          <% if (product.discountPrice) { %>
+          <span class="text-3xl font-bold text-rose-600">৳ <%= product.discountPrice %></span>
+          <span class="text-xl text-gray-400 line-through">৳ <%= product.price %></span>
+          <span class="bg-green-100 text-green-700 text-sm px-2 py-0.5 rounded-full font-medium">
+            <%= Math.round((1 - product.discountPrice / product.price) * 100) %>% ছাড়
+          </span>
+          <% } else { %>
+          <span class="text-3xl font-bold text-rose-600">৳ <%= product.price %></span>
+          <% } %>
+        </div>
+
+        <% if (product.stock <= 0) { %>
+        <div class="bg-red-50 text-red-700 px-4 py-2 rounded-lg mb-4 font-medium">স্টক শেষ</div>
+        <% } else { %>
+        <div class="bg-green-50 text-green-700 px-4 py-2 rounded-lg mb-4 text-sm">✓ স্টকে আছে</div>
+        <% } %>
+
+        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+          <h3 class="font-semibold mb-2">ডেলিভারি তথ্য</h3>
+          <table class="w-full text-sm">
+            <tr class="border-b border-gray-200"><td class="py-2">ঢাকার ভিতরে</td><td class="py-2 text-right font-medium">৳ <%= settings?.deliveryChargeDhakaInside || 130 %></td></tr>
+            <tr class="border-b border-gray-200"><td class="py-2">ঢাকার বাইরে</td><td class="py-2 text-right font-medium">৳ <%= settings?.deliveryChargeDhakaOutside || 100 %></td></tr>
+            <tr><td class="py-2">এক্সপ্রেস ডেলিভারি</td><td class="py-2 text-right font-medium">৳ <%= settings?.deliveryChargeExpress || 60 %></td></tr>
+          </table>
+        </div>
+
+        <% if (product.productCode) { %>
+        <p class="text-sm text-gray-500 mb-4">প্রোডাক্ট কোড: <%= product.productCode %></p>
+        <% } %>
+
+        <div class="flex gap-3">
+          <button onclick="addToCart('<%= product._id %>')"
+            class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-semibold transition text-lg"
+            <%= product.stock <= 0 ? 'disabled' : '' %>>
+            কার্টে যোগ করুন
+          </button>
+          <button onclick="buyNow('<%= product._id %>')"
+            class="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-xl font-semibold transition text-lg"
+            <%= product.stock <= 0 ? 'disabled' : '' %>>
+            এখনই অর্ডার করুন
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <% if (product.description) { %>
+    <div class="mt-8 border-t pt-6">
+      <h2 class="text-lg font-bold mb-3">বিস্তারিত বিবরণ</h2>
+      <div class="prose prose-sm max-w-none text-gray-600"><%- product.description %></div>
+    </div>
+    <% } %>
+  </div>
+
+  <% if (related && related.length) { %>
+  <section class="mt-10">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">সম্পর্কিত পণ্য</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+      <% related.forEach(function(product) { %>
+        <%- include('../partials/product-card', { product }) %>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

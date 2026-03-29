@@ -1,0 +1,45 @@
+  </main>
+
+  <footer class="bg-gray-800 text-gray-300 mt-12">
+    <div class="max-w-7xl mx-auto px-4 py-10">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="mb-3">
+            <span class="text-2xl font-bold text-rose-400">খুচরা</span>
+            <span class="text-2xl font-bold text-white">বাজার</span>
+          </div>
+          <p class="text-sm text-gray-400">অনলাইন শপিং বাংলাদেশ। সারা দেশে হোম ডেলিভারি।</p>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-3">যোগাযোগ</h3>
+          <ul class="space-y-2 text-sm">
+            <% if (settings?.contactEmail) { %><li><%= settings.contactEmail %></li><% } %>
+            <% if (settings?.contactPhone) { %><li><%= settings.contactPhone %></li><% } %>
+            <% if (settings?.address) { %><li><%= settings.address %></li><% } %>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-3">দ্রুত লিংক</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="/" class="hover:text-rose-400 transition">হোম</a></li>
+            <li><a href="/cart" class="hover:text-rose-400 transition">কার্ট</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-white font-semibold mb-3">ডেলিভারি চার্জ</h3>
+          <ul class="space-y-2 text-sm">
+            <li>ঢাকার ভিতরে: ৳<%= settings?.deliveryChargeDhakaInside || 130 %></li>
+            <li>ঢাকার বাইরে: ৳<%= settings?.deliveryChargeDhakaOutside || 100 %></li>
+            <li>এক্সপ্রেস: ৳<%= settings?.deliveryChargeExpress || 60 %></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm text-gray-500">
+        &copy; <%= new Date().getFullYear() %> খুচরা বাজার। সর্বস্বত্ব সংরক্ষিত।
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

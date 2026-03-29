@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | ' : '' %><%= settings?.siteName || 'খুচরা বাজার' %></title>
+  <meta name="description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : 'খুচরা বাজার - অনলাইন শপিং বাংলাদেশ। সারা দেশে হোম ডেলিভারি।' %>">
+  <link rel="stylesheet" href="/css/output.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body { font-family: 'Hind Siliguri', sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <% if (settings?.announcementBar) { %>
+  <div class="bg-rose-600 text-white text-center text-sm py-1.5 px-4">
+    <%= settings.announcementBar %>
+  </div>
+  <% } %>
+
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        <a href="/" class="flex items-center gap-2">
+          <span class="text-2xl font-bold text-rose-600">খুচরা</span>
+          <span class="text-2xl font-bold text-gray-700">বাজার</span>
+        </a>
+
+        <form action="/search" method="GET" class="hidden md:flex flex-1 max-w-xl mx-8">
+          <div class="relative w-full">
+            <input type="text" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>"
+              placeholder="পণ্য খুঁজুন..."
+              class="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500">
+            <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+          </div>
+        </form>
+
+        <div class="flex items-center gap-4">
+          <a href="/cart" class="relative flex items-center gap-1 text-gray-600 hover:text-rose-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            <span class="text-sm font-medium hidden sm:inline">কার্ট</span>
+            <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+            <span class="absolute -top-2 -right-2 bg-rose-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"><%= cartCount %></span>
+            <% } %>
+          </a>
+        </div>
+      </div>
+
+      <form action="/search" method="GET" class="md:hidden pb-3">
+        <div class="relative">
+          <input type="text" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>"
+            placeholder="পণ্য খুঁজুন..."
+            class="w-full border border-gray-300 rounded-lg pl-4 pr-10 py-2 text-sm focus:outline-none focus:border-rose-500">
+          <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <% if (typeof categories !== 'undefined' && categories.length) { %>
+    <div class="bg-gray-100 border-t">
+      <div class="max-w-7xl mx-auto px-4 overflow-x-auto">
+        <div class="flex gap-1 py-2 text-sm whitespace-nowrap">
+          <a href="/" class="px-3 py-1 rounded-full hover:bg-rose-100 hover:text-rose-700 transition">সকল পণ্য</a>
+          <% categories.forEach(function(cat) { %>
+          <a href="/category/<%= cat.slug %>" class="px-3 py-1 rounded-full hover:bg-rose-100 hover:text-rose-700 transition"><%= cat.name %></a>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </header>
+
+  <main class="flex-1">

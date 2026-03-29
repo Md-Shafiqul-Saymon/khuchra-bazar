@@ -1,0 +1,93 @@
+<%- include('partials/sidebar', { pageTitle: 'Settings' }) %>
+
+<div x-data="settingsPage()" x-init="init()">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+
+  <template x-if="success">
+    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg mb-4 text-sm" x-text="success"></div>
+  </template>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="font-semibold mb-4">General</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Site Name</label>
+          <input type="text" x-model="form.siteName" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Announcement Bar</label>
+          <input type="text" x-model="form.announcementBar" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="font-semibold mb-4">Contact</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <input type="text" x-model="form.contactPhone" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="text" x-model="form.contactEmail" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <input type="text" x-model="form.address" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="font-semibold mb-4">Delivery Charges</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Dhaka Inside (৳)</label>
+          <input type="number" x-model.number="form.deliveryChargeDhakaInside" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Dhaka Outside (৳)</label>
+          <input type="number" x-model.number="form.deliveryChargeDhakaOutside" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Express (৳)</label>
+          <input type="number" x-model.number="form.deliveryChargeExpress" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="font-semibold mb-4">Social Links</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Facebook URL</label>
+          <input type="text" x-model="form.socialLinks.facebook" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Instagram URL</label>
+          <input type="text" x-model="form.socialLinks.instagram" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">YouTube URL</label>
+          <input type="text" x-model="form.socialLinks.youtube" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <button @click="save()" :disabled="saving"
+      class="bg-rose-600 hover:bg-rose-700 disabled:bg-gray-400 text-white px-8 py-2.5 rounded-xl font-semibold transition">
+      <span x-show="!saving">Save Settings</span>
+      <span x-show="saving">Saving...</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  const CURRENT_SETTINGS = <%- JSON.stringify(settings || {}) %>;
+</script>
+
+<%- include('partials/end') %>
