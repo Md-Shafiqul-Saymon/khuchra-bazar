@@ -6,7 +6,11 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/http-exception.filter';
 
-async function bootstrap() {
+let cachedApp: NestExpressApplication;
+
+export async function createApp(): Promise<NestExpressApplication> {
+  if (cachedApp) return cachedApp;
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(compression());
@@ -23,8 +27,18 @@ async function bootstrap() {
     etag: true,
   });
 
+  await app.init();
+  cachedApp = app;
+  return app;
+}
+
+async function bootstrap() {
+  const app = await createApp();
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`খুচরা বাজার running on http://localhost:${port}`);
 }
-bootstrap();
+
+if (require.main === module) {
+  bootstrap();
+}
