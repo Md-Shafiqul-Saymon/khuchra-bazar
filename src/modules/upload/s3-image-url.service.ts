@@ -6,11 +6,13 @@ import { UploadService } from './upload.service';
 
 @Injectable()
 export class S3ImageUrlService {
-  private client: S3Client | null = null;
   private bucket: string;
   private region: string;
   private baseUrl: string;
   private expiresIn: number;
+  private readonly clientCache = new Map<string, S3Client>();
+  private readonly accessKeyId: string;
+  private readonly secretAccessKey: string;
 
   constructor(private config: ConfigService) {
     this.bucket = this.config.get('AWS_S3_BUCKET') || '';
@@ -20,26 +22,32 @@ export class S3ImageUrlService {
       Math.max(parseInt(this.config.get('AWS_S3_SIGNED_URL_EXPIRES') || '604800', 10), 60),
       604800,
     );
-    if (this.bucket) {
-      this.client = new S3Client({
-        region: this.region,
-        credentials: {
-          accessKeyId: this.config.get('AWS_ACCESS_KEY_ID'),
-          secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
-        },
-      });
-    }
+    this.accessKeyId = this.config.get('AWS_ACCESS_KEY_ID') || '';
+    this.secretAccessKey = this.config.get('AWS_SECRET_ACCESS_KEY') || '';
   }
 
-  /** Object key for our bucket, or null if URL is local / external / not ours. */
-  extractKey(url: string): string | null {
-    if (!url || url.startsWith('/') || !this.bucket) return null;
+  private escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * For https://BUCKET.s3.REGION.amazonaws.com/key — use REGION from the URL for SigV4,
+   * so presigning still works if AWS_S3_REGION is missing/wrong on the server (e.g. Vercel).
+   */
+  private parseVirtualHostedUrl(url: string): { key: string; region: string } | null {
+    if (!this.bucket || !url || url.startsWith('/')) return null;
     const clean = url.split('?')[0];
     try {
       const u = new URL(clean);
-      const expectedHost = `${this.bucket}.s3.${this.region}.amazonaws.com`.toLowerCase();
-      if (u.hostname.toLowerCase() === expectedHost) {
-        return decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+      const re = new RegExp(
+        `^${this.escapeRegex(this.bucket)}\\.s3\\.([a-z0-9-]+)\\.amazonaws\\.com$`,
+        'i',
+      );
+      const m = u.hostname.match(re);
+      if (m) {
+        const key = decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+        if (!key) return null;
+        return { key, region: m[1] };
       }
       if (this.baseUrl) {
         const b = new URL(this.baseUrl);
@@ -49,7 +57,8 @@ export class S3ImageUrlService {
           if (basePath && path.startsWith(`${basePath}/`)) {
             path = path.slice(basePath.length + 1);
           }
-          return decodeURIComponent(path);
+          if (!path) return null;
+          return { key: decodeURIComponent(path), region: this.region };
         }
       }
       return null;
@@ -58,13 +67,36 @@ export class S3ImageUrlService {
     }
   }
 
+  private getS3Client(region: string): S3Client | null {
+    if (!this.accessKeyId || !this.secretAccessKey) return null;
+    let c = this.clientCache.get(region);
+    if (!c) {
+      c = new S3Client({
+        region,
+        credentials: {
+          accessKeyId: this.accessKeyId,
+          secretAccessKey: this.secretAccessKey,
+        },
+      });
+      this.clientCache.set(region, c);
+    }
+    return c;
+  }
+
+  /** Object key for our bucket, or null if URL is local / external / not ours. */
+  extractKey(url: string): string | null {
+    return this.parseVirtualHostedUrl(url)?.key ?? null;
+  }
+
   async signUrl(url: string | undefined | null): Promise<string> {
     if (!url || typeof url !== 'string') return url || '';
-    if (!this.client || !this.bucket) return url;
-    const key = this.extractKey(url);
-    if (!key) return url;
-    const cmd = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.client, cmd, { expiresIn: this.expiresIn });
+    if (!this.bucket) return url;
+    const parsed = this.parseVirtualHostedUrl(url);
+    if (!parsed) return url;
+    const client = this.getS3Client(parsed.region);
+    if (!client) return url;
+    const cmd = new GetObjectCommand({ Bucket: this.bucket, Key: parsed.key });
+    return getSignedUrl(client, cmd, { expiresIn: this.expiresIn });
   }
 
   async signUrls(urls: string[]): Promise<string[]> {
