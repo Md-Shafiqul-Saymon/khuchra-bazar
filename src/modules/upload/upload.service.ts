@@ -9,15 +9,16 @@ export class UploadService {
   private s3Client: S3Client;
   private bucket: string;
   private baseUrl: string;
+  private region: string;
 
   constructor(private configService: ConfigService) {
-    const region = this.configService.get('AWS_S3_REGION') || 'ap-southeast-1';
+    this.region = this.configService.get('AWS_S3_REGION') || 'ap-southeast-1';
     this.bucket = this.configService.get('AWS_S3_BUCKET') || '';
-    this.baseUrl = this.configService.get('S3_BASE_URL') || '';
+    this.baseUrl = (this.configService.get('S3_BASE_URL') || '').replace(/\/$/, '');
 
     if (this.bucket) {
       this.s3Client = new S3Client({
-        region,
+        region: this.region,
         credentials: {
           accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
           secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
@@ -46,7 +47,10 @@ export class UploadService {
       }),
     );
 
-    return this.baseUrl ? `${this.baseUrl}/${key}` : `https://${this.bucket}.s3.amazonaws.com/${key}`;
+    if (this.baseUrl) {
+      return `${this.baseUrl}/${key}`;
+    }
+    return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
   }
 
   async uploadMultiple(files: Express.Multer.File[]): Promise<string[]> {
