@@ -36,16 +36,24 @@
       <div class="bg-white rounded-xl shadow-sm p-6">
         <h2 class="font-semibold mb-4">Images</h2>
         <div class="flex flex-wrap gap-3 mb-4">
-          <template x-for="(img, i) in form.images" :key="i">
+          <template x-for="(img, i) in form.images" :key="'saved-' + i">
             <div class="relative w-24 h-24">
               <img :src="img" class="w-full h-full object-cover rounded-lg border">
-              <button @click="form.images.splice(i, 1)" class="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">&times;</button>
+              <button type="button" @click="form.images.splice(i, 1)" class="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">&times;</button>
+            </div>
+          </template>
+          <template x-for="(url, i) in previewUrls" :key="'pending-' + i">
+            <div class="relative w-24 h-24">
+              <img :src="url" class="w-full h-full object-cover rounded-lg border border-dashed border-rose-300">
+              <span class="absolute bottom-0 left-0 right-0 bg-rose-600/90 text-white text-[10px] text-center py-0.5">Not saved</span>
+              <button type="button" @click="removePending(i)" class="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">&times;</button>
             </div>
           </template>
         </div>
-        <input type="file" accept="image/*" multiple @change="uploadImages($event)"
+        <input type="file" x-ref="imageInput" accept="image/*" multiple @change="onFileSelect($event)"
           class="text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-rose-50 file:text-rose-700 file:font-medium hover:file:bg-rose-100">
-        <p class="text-xs text-gray-400 mt-1" x-show="uploading">Uploading...</p>
+        <p class="text-xs text-gray-400 mt-1">Images upload to storage when you click <span class="font-medium text-gray-600">Update Product</span> / <span class="font-medium text-gray-600">Create Product</span>.</p>
+        <p class="text-xs text-rose-600 mt-1" x-show="uploading">Uploading images…</p>
       </div>
     </div>
 

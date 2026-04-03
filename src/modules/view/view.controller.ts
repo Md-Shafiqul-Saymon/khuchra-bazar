@@ -5,6 +5,7 @@ import { CategoryService } from '../category/category.service';
 import { CartService } from '../cart/cart.service';
 import { OrderService } from '../order/order.service';
 import { SettingsService } from '../settings/settings.service';
+import { S3ImageUrlService } from '../upload/s3-image-url.service';
 
 @Controller()
 export class ViewController {
@@ -14,6 +15,7 @@ export class ViewController {
     private cartService: CartService,
     private orderService: OrderService,
     private settingsService: SettingsService,
+    private s3ImageUrlService: S3ImageUrlService,
   ) {}
 
   private getIp(req: Request): string {
@@ -24,15 +26,22 @@ export class ViewController {
     );
   }
 
+  private async settingsView() {
+    const settings = await this.settingsService.get();
+    return this.s3ImageUrlService.signSettings(settings);
+  }
+
   @Get()
   async home(@Req() req: Request, @Res() res: Response, @Query('page') page: string) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const categories = await this.categoryService.findAll();
-    const flashSale = await this.productService.findFlashSale();
-    const { products, total, pages } = await this.productService.findAll({
+    const flashSaleRaw = await this.productService.findFlashSale();
+    const flashSale = await this.s3ImageUrlService.signProducts(flashSaleRaw);
+    const { products: productsRaw, total, pages } = await this.productService.findAll({
       page: parseInt(page) || 1,
       limit: 20,
     });
+    const products = await this.s3ImageUrlService.signProducts(productsRaw);
     const cartCount = await this.cartService.getItemCount(this.getIp(req));
 
     res.render('pages/home', {
@@ -43,14 +52,16 @@ export class ViewController {
 
   @Get('product/:slug')
   async productDetail(@Req() req: Request, @Res() res: Response, @Param('slug') slug: string) {
-    const settings = await this.settingsService.get();
-    const product = await this.productService.findBySlug(slug);
-    if (!product) return res.status(404).render('pages/404', { settings });
+    const settings = await this.settingsView();
+    const productRaw = await this.productService.findBySlug(slug);
+    if (!productRaw) return res.status(404).render('pages/404', { settings });
 
-    const catId = (product.category as any)?._id || product.category;
-    const related = catId
-      ? await this.productService.findRelated(catId.toString(), product._id.toString())
+    const product = await this.s3ImageUrlService.signProduct(productRaw);
+    const catId = (product!.category as any)?._id || product!.category;
+    const relatedRaw = catId
+      ? await this.productService.findRelated(catId.toString(), product!._id.toString())
       : [];
+    const related = await this.s3ImageUrlService.signProducts(relatedRaw);
     const cartCount = await this.cartService.getItemCount(this.getIp(req));
     const categories = await this.categoryService.findAll();
 
@@ -59,7 +70,7 @@ export class ViewController {
 
   @Get('cart')
   async cart(@Req() req: Request, @Res() res: Response) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const cart = await this.cartService.getCartWithProducts(this.getIp(req));
     const categories = await this.categoryService.findAll();
 
@@ -68,7 +79,7 @@ export class ViewController {
 
   @Get('checkout')
   async checkout(@Req() req: Request, @Res() res: Response) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const cart = await this.cartService.getCartWithProducts(this.getIp(req));
     const categories = await this.categoryService.findAll();
 
@@ -79,7 +90,7 @@ export class ViewController {
 
   @Get('order-success/:id')
   async orderSuccess(@Req() req: Request, @Res() res: Response, @Param('id') id: string) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const order = await this.orderService.findById(id);
     if (!order) return res.status(404).render('pages/404', { settings });
     const categories = await this.categoryService.findAll();
@@ -89,18 +100,18 @@ export class ViewController {
 
   @Get('search')
   async search(@Req() req: Request, @Res() res: Response, @Query('q') q: string, @Query('page') page: string) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const categories = await this.categoryService.findAll();
     const cartCount = await this.cartService.getItemCount(this.getIp(req));
 
-    let products = [], total = 0, pages = 0;
+    let products: any[] = [], total = 0, pages = 0;
     if (q) {
       const result = await this.productService.findAll({
         page: parseInt(page) || 1,
         limit: 20,
         search: q,
       });
-      products = result.products;
+      products = await this.s3ImageUrlService.signProducts(result.products);
       total = result.total;
       pages = result.pages;
     }
@@ -116,16 +127,17 @@ export class ViewController {
     @Req() req: Request, @Res() res: Response,
     @Param('slug') slug: string, @Query('page') page: string,
   ) {
-    const settings = await this.settingsService.get();
+    const settings = await this.settingsView();
     const categories = await this.categoryService.findAll();
     const category = await this.categoryService.findBySlug(slug);
     if (!category) return res.status(404).render('pages/404', { settings });
 
-    const { products, total, pages } = await this.productService.findAll({
+    const { products: productsRaw, total, pages } = await this.productService.findAll({
       page: parseInt(page) || 1,
       limit: 20,
       category: (category as any)._id,
     });
+    const products = await this.s3ImageUrlService.signProducts(productsRaw);
     const cartCount = await this.cartService.getItemCount(this.getIp(req));
 
     res.render('pages/category', {

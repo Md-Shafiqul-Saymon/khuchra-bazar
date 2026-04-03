@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cart } from '../../schemas/cart.schema';
 import { ProductService } from '../product/product.service';
+import { S3ImageUrlService } from '../upload/s3-image-url.service';
 
 @Injectable()
 export class CartService {
   constructor(
     @InjectModel(Cart.name) private cartModel: Model<Cart>,
     private productService: ProductService,
+    private s3ImageUrlService: S3ImageUrlService,
   ) {}
 
   async getCart(ip: string) {
@@ -27,7 +29,7 @@ export class CartService {
     const products = await this.productService.findByIds(productIds);
     const productMap = new Map(products.map((p) => [p._id.toString(), p]));
 
-    const items = cart.items
+    const rawItems = cart.items
       .map((item) => {
         const product = productMap.get(item.productId.toString());
         if (!product) return null;
@@ -44,6 +46,13 @@ export class CartService {
         };
       })
       .filter(Boolean);
+
+    const items = await Promise.all(
+      rawItems.map(async (i) => ({
+        ...i,
+        image: i.image ? await this.s3ImageUrlService.signUrl(i.image) : '',
+      })),
+    );
 
     const totalItems = items.reduce((s, i) => s + i.quantity, 0);
     const subtotal = items.reduce((s, i) => s + i.lineTotal, 0);

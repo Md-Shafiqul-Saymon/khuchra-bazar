@@ -4,11 +4,13 @@ import { Cart, CartSchema } from '../../schemas/cart.schema';
 import { CartService } from './cart.service';
 import { CartController } from './cart.controller';
 import { ProductModule } from '../product/product.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Cart.name, schema: CartSchema }]),
     ProductModule,
+    UploadModule,
   ],
   controllers: [CartController],
   providers: [CartService],

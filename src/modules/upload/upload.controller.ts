@@ -22,7 +22,8 @@ export class UploadController {
   @Post('multiple')
   @UseInterceptors(FilesInterceptor('files', 10, { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadMultiple(@UploadedFiles() files: Express.Multer.File[]) {
-    const urls = await this.uploadService.uploadMultiple(files);
+    const list = Array.isArray(files) ? files : files ? [files] : [];
+    const urls = await this.uploadService.uploadMultiple(list);
     return { urls };
   }
 }

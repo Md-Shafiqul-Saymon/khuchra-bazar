@@ -5,6 +5,7 @@ import { CategoryService } from '../category/category.service';
 import { OrderService } from '../order/order.service';
 import { SettingsService } from '../settings/settings.service';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
+import { S3ImageUrlService } from '../upload/s3-image-url.service';
 
 @Controller('admin')
 export class AdminViewController {
@@ -13,6 +14,7 @@ export class AdminViewController {
     private categoryService: CategoryService,
     private orderService: OrderService,
     private settingsService: SettingsService,
+    private s3ImageUrlService: S3ImageUrlService,
   ) {}
 
   @Get('login')
@@ -35,8 +37,9 @@ export class AdminViewController {
       page: parseInt(page) || 1,
       search,
     });
+    const products = await this.s3ImageUrlService.signProducts(result.products);
     const categories = await this.categoryService.findAll();
-    res.render('admin/products', { ...result, categories, search });
+    res.render('admin/products', { ...result, products, categories, search });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -49,7 +52,9 @@ export class AdminViewController {
   @UseGuards(JwtAuthGuard)
   @Get('products/:id/edit')
   async editProduct(@Res() res: Response, @Param('id') id: string) {
-    const product = await this.productService.findById(id);
+    const productRaw = await this.productService.findById(id);
+    if (!productRaw) return res.redirect('/admin/products');
+    const product = await this.s3ImageUrlService.signProduct(productRaw);
     const categories = await this.categoryService.findAll();
     res.render('admin/product-form', { product, categories });
   }
@@ -67,7 +72,9 @@ export class AdminViewController {
   @UseGuards(JwtAuthGuard)
   @Get('orders/:id')
   async orderDetail(@Res() res: Response, @Param('id') id: string) {
-    const order = await this.orderService.findById(id);
+    const orderRaw = await this.orderService.findById(id);
+    if (!orderRaw) return res.redirect('/admin/orders');
+    const order = await this.s3ImageUrlService.signOrder(orderRaw);
     res.render('admin/order-detail', { order });
   }
 
@@ -81,7 +88,8 @@ export class AdminViewController {
   @UseGuards(JwtAuthGuard)
   @Get('settings')
   async settings(@Res() res: Response) {
-    const settings = await this.settingsService.get();
+    const settingsRaw = await this.settingsService.get();
+    const settings = await this.s3ImageUrlService.signSettings(settingsRaw);
     res.render('admin/settings', { settings });
   }
 }
