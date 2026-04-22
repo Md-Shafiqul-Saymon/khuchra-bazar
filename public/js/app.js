@@ -13,6 +13,17 @@ async function addToCart(productId) {
     const data = await res.json();
     updateCartBadge(data.totalItems);
     showToast('কার্টে যোগ হয়েছে!');
+
+    if (typeof window.trackAddToCart === 'function') {
+      const priceEl = document.querySelector('[data-product-price]');
+      const nameEl = document.querySelector('[data-product-name]');
+      const rawPrice = priceEl?.getAttribute('data-product-price') ?? priceEl?.textContent ?? '0';
+      window.trackAddToCart({
+        id: productId,
+        name: nameEl ? nameEl.textContent.trim() : 'Product',
+        price: parseFloat(String(rawPrice).replace(/[^\d.]/g, '')) || 0,
+      }, 1);
+    }
   } catch (e) {
     showToast('সমস্যা হয়েছে, আবার চেষ্টা করুন', true);
   }
@@ -20,11 +31,24 @@ async function addToCart(productId) {
 
 async function buyNow(productId) {
   try {
-    await fetch('/api/cart/add', {
+    const res = await fetch('/api/cart/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, quantity: 1 }),
     });
+    
+    // Meta Pixel: Track AddToCart
+    if (typeof window.trackAddToCart === 'function') {
+      const priceEl = document.querySelector('[data-product-price]');
+      const nameEl = document.querySelector('[data-product-name]');
+      const rawPrice = priceEl?.getAttribute('data-product-price') ?? priceEl?.textContent ?? '0';
+      window.trackAddToCart({
+        id: productId,
+        name: nameEl ? nameEl.textContent.trim() : 'Product',
+        price: parseFloat(String(rawPrice).replace(/[^\d.]/g, '')) || 0,
+      }, 1);
+    }
+
     window.location.href = '/checkout';
   } catch (e) {
     showToast('সমস্যা হয়েছে', true);
@@ -109,6 +133,7 @@ function checkoutPage() {
         return;
       }
       this.loading = true;
+
       try {
         const res = await fetch('/api/orders', {
           method: 'POST',

@@ -9,6 +9,7 @@ import { GlobalExceptionFilter } from './common/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.enableCors({ origin: true, credentials: true });
   app.use(compression());
   app.use(cookieParser());
   app.set('trust proxy', true);

@@ -30,18 +30,18 @@
       </div>
 
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3"><%= product.name %></h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3" data-product-name><%= product.name %></h1>
         <% if (product.nameEn) { %><p class="text-gray-500 mb-3"><%= product.nameEn %></p><% } %>
 
         <div class="flex items-baseline gap-3 mb-4">
           <% if (product.discountPrice) { %>
-          <span class="text-3xl font-bold text-rose-600">৳ <%= product.discountPrice %></span>
+          <span class="text-3xl font-bold text-rose-600" data-product-price="<%= product.discountPrice %>">৳ <%= product.discountPrice %></span>
           <span class="text-xl text-gray-400 line-through">৳ <%= product.price %></span>
           <span class="bg-green-100 text-green-700 text-sm px-2 py-0.5 rounded-full font-medium">
             <%= Math.round((1 - product.discountPrice / product.price) * 100) %>% ছাড়
           </span>
           <% } else { %>
-          <span class="text-3xl font-bold text-rose-600">৳ <%= product.price %></span>
+          <span class="text-3xl font-bold text-rose-600" data-product-price="<%= product.price %>">৳ <%= product.price %></span>
           <% } %>
         </div>
 
@@ -78,6 +78,16 @@
         </div>
       </div>
     </div>
+
+    <script>
+      if (typeof window.trackViewContent === 'function') {
+        window.trackViewContent({
+          id: '<%= product._id %>',
+          name: <%- JSON.stringify(product.name) %>,
+          price: <%= Number(product.discountPrice || product.price) || 0 %>
+        });
+      }
+    </script>
 
     <% if (product.description) { %>
     <div class="mt-8 border-t pt-6">

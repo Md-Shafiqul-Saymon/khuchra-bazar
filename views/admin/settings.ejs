@@ -59,6 +59,18 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="font-semibold mb-4">Analytics</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Meta (Facebook) Pixel ID</label>
+          <input type="text" x-model="form.metaPixelId" placeholder="e.g. 123456789012345"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+          <p class="text-xs text-gray-500 mt-1">Numeric ID from Meta Events Manager. Overrides <code class="bg-gray-100 px-1 rounded">META_PIXEL_ID</code> in .env when set.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
       <h2 class="font-semibold mb-4">Social Links</h2>
       <div class="space-y-4">
         <div>

@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="/css/output.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <% if (typeof metaPixel !== 'undefined' && metaPixel && metaPixel.isConfigured) { %>
+  <%- metaPixel.pixelScript %>
+  <%- metaPixel.eventTracker %>
+  <% } %>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     body { font-family: 'Hind Siliguri', sans-serif; }

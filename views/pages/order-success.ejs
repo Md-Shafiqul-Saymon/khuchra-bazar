@@ -52,6 +52,15 @@
       আরও শপিং করুন
     </a>
   </div>
+
+  <script>
+    if (typeof window.trackPurchase === 'function') {
+      window.trackPurchase({
+        total: <%= Number(order.total) || 0 %>,
+        items: <%- JSON.stringify(order.items || []) %>
+      });
+    }
+  </script>
 </div>
 
 <%- include('../partials/footer') %>

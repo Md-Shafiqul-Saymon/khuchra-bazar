@@ -115,6 +115,13 @@
     'dhaka-outside': <%= settings?.deliveryChargeDhakaOutside || 100 %>,
     'express': <%= settings?.deliveryChargeExpress || 60 %>,
   };
+
+  if (typeof window.trackInitiateCheckout === 'function') {
+    window.trackInitiateCheckout({
+      totalItems: <%= cart.totalItems %>,
+      subtotal: <%= Number(cart.subtotal) || 0 %>
+    });
+  }
 </script>
 
 <%- include('../partials/footer') %>

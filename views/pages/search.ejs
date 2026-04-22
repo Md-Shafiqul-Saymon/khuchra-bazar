@@ -33,4 +33,12 @@
   <% } %>
 </div>
 
+<% if (typeof q !== 'undefined' && q && typeof metaPixel !== 'undefined' && metaPixel && metaPixel.isConfigured) { %>
+<script>
+  if (typeof window.trackSearch === 'function') {
+    window.trackSearch(<%- JSON.stringify(q) %>);
+  }
+</script>
+<% } %>
+
 <%- include('../partials/footer') %>

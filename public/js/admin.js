@@ -151,7 +151,8 @@ function settingsPage() {
   return {
     form: {
       siteName: '', announcementBar: '', contactPhone: '', contactEmail: '',
-      address: '', socialLinks: { facebook: '', instagram: '', youtube: '' },
+      address: '', metaPixelId: '',
+      socialLinks: { facebook: '', instagram: '', youtube: '' },
       deliveryChargeDhakaInside: 130, deliveryChargeDhakaOutside: 100, deliveryChargeExpress: 60,
     },
     saving: false,
@@ -164,6 +165,7 @@ function settingsPage() {
           contactPhone: CURRENT_SETTINGS.contactPhone || '',
           contactEmail: CURRENT_SETTINGS.contactEmail || '',
           address: CURRENT_SETTINGS.address || '',
+          metaPixelId: CURRENT_SETTINGS.metaPixelId || '',
           socialLinks: CURRENT_SETTINGS.socialLinks || { facebook: '', instagram: '', youtube: '' },
           deliveryChargeDhakaInside: CURRENT_SETTINGS.deliveryChargeDhakaInside || 130,
           deliveryChargeDhakaOutside: CURRENT_SETTINGS.deliveryChargeDhakaOutside || 100,

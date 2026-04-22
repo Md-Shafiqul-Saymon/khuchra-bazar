@@ -8,6 +8,7 @@ import { OrderModule } from '../order/order.module';
 import { SettingsModule } from '../settings/settings.module';
 import { AdminModule } from '../admin/admin.module';
 import { UploadModule } from '../upload/upload.module';
+import { MetaPixelService } from '../../common/meta-pixel.service';
 
 @Module({
   imports: [
@@ -20,5 +21,6 @@ import { UploadModule } from '../upload/upload.module';
     UploadModule,
   ],
   controllers: [ViewController, AdminViewController],
+  providers: [MetaPixelService],
 })
 export class ViewModule {}

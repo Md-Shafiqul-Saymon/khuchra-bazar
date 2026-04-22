@@ -24,6 +24,10 @@ export class Settings extends Document {
   @Prop({ type: Object, default: {} })
   socialLinks: Record<string, string>;
 
+  /** Meta (Facebook) Pixel ID — optional; falls back to META_PIXEL_ID env */
+  @Prop()
+  metaPixelId: string;
+
   @Prop({ default: 130 })
   deliveryChargeDhakaInside: number;
 
