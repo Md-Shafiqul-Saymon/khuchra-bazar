@@ -9,7 +9,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (req.headers.accept?.includes('text/html')) {
         const res = context.switchToHttp().getResponse();
         res.redirect('/admin/login');
-        return null;
+        throw new UnauthorizedException();
       }
       throw err || new UnauthorizedException();
     }

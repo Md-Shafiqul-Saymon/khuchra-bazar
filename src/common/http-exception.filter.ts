@@ -10,6 +10,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    if (response.headersSent || response.writableEnded) {
+      return;
+    }
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
