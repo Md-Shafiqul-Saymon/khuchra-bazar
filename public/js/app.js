@@ -3,12 +3,13 @@ function getCookie(name) {
   return v ? v[2] : null;
 }
 
-async function addToCart(productId) {
+async function addToCart(productId, quantity = 1) {
+  const safeQty = Math.max(1, parseInt(quantity, 10) || 1);
   try {
     const res = await fetch('/api/cart/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, quantity: 1 }),
+      body: JSON.stringify({ productId, quantity: safeQty }),
     });
     const data = await res.json();
     updateCartBadge(data.totalItems);
@@ -22,19 +23,20 @@ async function addToCart(productId) {
         id: productId,
         name: nameEl ? nameEl.textContent.trim() : 'Product',
         price: parseFloat(String(rawPrice).replace(/[^\d.]/g, '')) || 0,
-      }, 1);
+      }, safeQty);
     }
   } catch (e) {
     showToast('সমস্যা হয়েছে, আবার চেষ্টা করুন', true);
   }
 }
 
-async function buyNow(productId) {
+async function buyNow(productId, quantity = 1) {
+  const safeQty = Math.max(1, parseInt(quantity, 10) || 1);
   try {
     const res = await fetch('/api/cart/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, quantity: 1 }),
+      body: JSON.stringify({ productId, quantity: safeQty }),
     });
     
     // Meta Pixel: Track AddToCart
@@ -46,7 +48,7 @@ async function buyNow(productId) {
         id: productId,
         name: nameEl ? nameEl.textContent.trim() : 'Product',
         price: parseFloat(String(rawPrice).replace(/[^\d.]/g, '')) || 0,
-      }, 1);
+      }, safeQty);
     }
 
     window.location.href = '/checkout';

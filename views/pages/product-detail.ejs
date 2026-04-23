@@ -29,7 +29,7 @@
         <% } %>
       </div>
 
-      <div>
+      <div x-data="{ qty: 1 }">
         <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-3" data-product-name><%= product.name %></h1>
         <% if (product.nameEn) { %><p class="text-gray-500 mb-3"><%= product.nameEn %></p><% } %>
 
@@ -64,18 +64,48 @@
         <p class="text-sm text-gray-500 mb-4">প্রোডাক্ট কোড: <%= product.productCode %></p>
         <% } %>
 
-        <div class="flex gap-3">
-          <button onclick="addToCart('<%= product._id %>')"
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-700 mb-2">পরিমাণ</p>
+          <div class="inline-flex items-center rounded-xl overflow-hidden border border-gray-300 bg-white">
+            <button type="button" @click="qty = Math.max(1, qty - 1)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200">-</button>
+            <input type="number" min="1" step="1" x-model.number="qty" class="w-16 text-center py-2 focus:outline-none">
+            <button type="button" @click="qty = qty + 1" class="px-4 py-2 bg-gray-100 hover:bg-gray-200">+</button>
+          </div>
+        </div>
+
+        <div class="flex gap-3 flex-wrap">
+          <button @click="addToCart('<%= product._id %>', qty)"
             class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-semibold transition text-lg"
             <%= product.stock <= 0 ? 'disabled' : '' %>>
             কার্টে যোগ করুন
           </button>
-          <button onclick="buyNow('<%= product._id %>')"
+          <button @click="buyNow('<%= product._id %>', qty)"
             class="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-xl font-semibold transition text-lg"
             <%= product.stock <= 0 ? 'disabled' : '' %>>
             এখনই অর্ডার করুন
           </button>
         </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <a
+            href="https://wa.me/8801888326497?text=<%= encodeURIComponent('আমি ' + product.name + ' প্রোডাক্টটি সম্পর্কে জানতে চাই।') %>"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2.5 px-3 rounded-xl font-medium"
+          >
+            WhatsApp এ মেসেজ করুন
+          </a>
+          <a
+            href="https://www.facebook.com/profile.php?id=61581357370767"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-xl font-medium"
+          >
+            Facebook পেইজে যান
+          </a>
+        </div>
+
+        <p class="text-sm text-gray-500 mt-3">WhatsApp: +8801888326497</p>
       </div>
     </div>
 
@@ -90,19 +120,66 @@
     </script>
 
     <% if (product.description) { %>
+    <% const formattedDescription = String(product.description)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/\r\n|\r|\u2028|\u2029/g, '\n')
+      .replace(/\n/g, '<br>'); %>
     <div class="mt-8 border-t pt-6">
       <h2 class="text-lg font-bold mb-3">বিস্তারিত বিবরণ</h2>
-      <div class="prose prose-sm max-w-none text-gray-600"><%- product.description %></div>
+      <div class="prose prose-sm max-w-none text-gray-600"><%- formattedDescription %></div>
     </div>
     <% } %>
   </div>
 
   <% if (related && related.length) { %>
   <section class="mt-10">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">সম্পর্কিত পণ্য</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-      <% related.forEach(function(product) { %>
-        <%- include('../partials/product-card', { product }) %>
+    <div class="border-b-2 border-amber-600 mb-4">
+      <h2 class="inline-block bg-amber-600 text-white text-sm font-bold px-3 py-1 rounded-t-md">Related Products</h2>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      <% related.forEach(function(item) { %>
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition">
+        <a href="/product/<%= item.slug %>" class="block relative">
+          <div class="aspect-square bg-gray-100 overflow-hidden">
+            <% if (item.images && item.images.length) { %>
+            <img src="<%= item.images[0] %>" alt="<%= item.name %>" class="w-full h-full object-cover" loading="lazy">
+            <% } else { %>
+            <div class="w-full h-full flex items-center justify-center text-gray-300">
+              <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <% } %>
+          </div>
+          <% if (item.discountPrice && item.price) { %>
+          <span class="absolute top-2 left-2 bg-gray-800 text-white text-xs font-semibold px-2 py-1 rounded">
+            অফার -<%= Math.round((1 - item.discountPrice / item.price) * 100) %>%
+          </span>
+          <% } %>
+        </a>
+
+        <div class="p-2.5">
+          <a href="/product/<%= item.slug %>" class="block">
+            <h3 class="text-sm font-medium text-gray-800 line-clamp-2 min-h-[2.5rem]"><%= item.name %></h3>
+          </a>
+
+          <div class="mt-1.5 flex items-center gap-2">
+            <% if (item.discountPrice) { %>
+            <span class="text-green-700 font-bold text-sm">TK <%= item.discountPrice %></span>
+            <span class="text-xs text-gray-400 line-through">TK <%= item.price %></span>
+            <% } else { %>
+            <span class="text-green-700 font-bold text-sm">TK <%= item.price %></span>
+            <% } %>
+          </div>
+
+          <button onclick="addToCart('<%= item._id %>', 1)" class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-md">
+            কার্টে যোগ করুন
+          </button>
+        </div>
+      </div>
       <% }); %>
     </div>
   </section>
