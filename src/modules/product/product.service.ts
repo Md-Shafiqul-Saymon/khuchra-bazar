@@ -1,12 +1,35 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Product } from '../../schemas/product.schema';
 import slugify from 'slugify';
 
 @Injectable()
 export class ProductService {
   constructor(@InjectModel(Product.name) private productModel: Model<Product>) {}
+
+  private normalizeCategoryInput(data: any) {
+    if (!Object.prototype.hasOwnProperty.call(data, 'category')) return;
+    const raw = data.category;
+
+    if (raw === null || raw === undefined || raw === '') {
+      data.category = null;
+      return;
+    }
+
+    if (typeof raw === 'string') {
+      data.category = Types.ObjectId.isValid(raw) ? raw : null;
+      return;
+    }
+
+    if (typeof raw === 'object' && raw._id) {
+      const id = String(raw._id);
+      data.category = Types.ObjectId.isValid(id) ? id : null;
+      return;
+    }
+
+    data.category = null;
+  }
 
   async findAll(query: {
     page?: number;
@@ -19,7 +42,10 @@ export class ProductService {
     const filter: any = {};
 
     if (status) filter.status = status;
-    if (category) filter.category = category;
+    if (category) {
+      // Support legacy records where category may be stored as string instead of ObjectId.
+      filter.$expr = { $eq: [{ $toString: '$category' }, String(category)] };
+    }
     if (search) filter.$text = { $search: search };
 
     const total = await this.productModel.countDocuments(filter);
@@ -66,12 +92,17 @@ export class ProductService {
 
   async findRelated(categoryId: string, excludeId: string, limit = 8) {
     return this.productModel
-      .find({ category: categoryId, _id: { $ne: excludeId }, status: 'active' })
+      .find({
+        status: 'active',
+        _id: { $ne: excludeId },
+        $expr: { $eq: [{ $toString: '$category' }, String(categoryId)] },
+      })
       .limit(limit)
       .lean();
   }
 
   async create(data: any) {
+    this.normalizeCategoryInput(data);
     if (!data.slug) {
       data.slug = slugify(data.nameEn || data.name, { lower: true, strict: true });
     }
@@ -83,6 +114,7 @@ export class ProductService {
   }
 
   async update(id: string, data: any) {
+    this.normalizeCategoryInput(data);
     if (data.nameEn && !data.slug) {
       data.slug = slugify(data.nameEn || data.name, { lower: true, strict: true });
     }
