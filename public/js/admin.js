@@ -25,10 +25,16 @@ function productForm() {
     },
     pendingFiles: [],
     previewUrls: [],
+    imageLibrary: [],
+    selectedExistingImage: '',
+    loadingLibrary: false,
     saving: false,
     uploading: false,
     error: '',
     success: '',
+    get selectedLibraryImage() {
+      return this.imageLibrary.find((img) => img.url === this.selectedExistingImage) || null;
+    },
     init() {
       if (typeof EDIT_PRODUCT !== 'undefined' && EDIT_PRODUCT) {
         this.form = {
@@ -46,6 +52,37 @@ function productForm() {
           isFeatured: EDIT_PRODUCT.isFeatured || false,
         };
       }
+
+      if (typeof INITIAL_IMAGE_LIBRARY !== 'undefined' && Array.isArray(INITIAL_IMAGE_LIBRARY)) {
+        this.imageLibrary = INITIAL_IMAGE_LIBRARY;
+      }
+
+      if (!this.imageLibrary.length) {
+        this.loadImageLibrary();
+      }
+    },
+    async loadImageLibrary() {
+      this.loadingLibrary = true;
+      try {
+        const res = await fetch('/api/upload/library', {
+          headers: { Authorization: 'Bearer ' + getCookie('admin_token') },
+        });
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.images)) {
+          this.imageLibrary = data.images;
+        }
+      } catch (e) {
+        // Ignore library fetch errors to keep product form usable.
+      }
+      this.loadingLibrary = false;
+    },
+    addExistingImage() {
+      const selectedUrl = this.selectedExistingImage;
+      if (!selectedUrl) return;
+      if (!this.form.images.includes(selectedUrl)) {
+        this.form.images.push(selectedUrl);
+      }
+      this.selectedExistingImage = '';
     },
     onFileSelect(event) {
       const files = Array.from(event.target.files || []);

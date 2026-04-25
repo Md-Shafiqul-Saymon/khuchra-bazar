@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, type PutObjectCommandInput } from '@aws-sdk/client-s3';
 import { writeFileSync, mkdirSync } from 'fs';
+import { readdir } from 'fs/promises';
 import { basename, dirname, join, posix } from 'path';
 
 @Injectable()
@@ -150,5 +151,23 @@ export class UploadService {
   async uploadMultiple(files: Express.Multer.File[] | undefined): Promise<string[]> {
     if (!files?.length) return [];
     return Promise.all(files.map((f) => this.uploadFile(f)));
+  }
+
+  async listLocalUploadImages(limit = 500): Promise<Array<{ url: string; name: string }>> {
+    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    const imageRegex = /\.(png|jpe?g|webp|gif|avif|svg)$/i;
+
+    try {
+      const entries = await readdir(uploadDir, { withFileTypes: true });
+      return entries
+        .filter((entry) => entry.isFile() && imageRegex.test(entry.name))
+        .map((entry) => ({
+          url: `/uploads/${entry.name}`,
+          name: entry.name,
+        }))
+        .slice(0, limit);
+    } catch {
+      return [];
+    }
   }
 }

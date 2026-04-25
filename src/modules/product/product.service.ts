@@ -175,4 +175,15 @@ export class ProductService {
 
     return { products, total, page, pages: Math.ceil(total / limit) };
   }
+
+  async listDistinctImageUrls(limit = 2000): Promise<string[]> {
+    const values = await this.productModel
+      .distinct('images', {
+        images: { $exists: true, $ne: [] },
+      });
+
+    return values
+      .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+      .slice(0, limit);
+  }
 }

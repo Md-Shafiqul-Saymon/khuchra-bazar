@@ -36,6 +36,26 @@
 
       <div class="bg-white rounded-xl shadow-sm p-6">
         <h2 class="font-semibold mb-4">Images</h2>
+        <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Use Existing Image (Server/S3)</label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <select x-model="selectedExistingImage" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
+              <option value="">Select an existing image</option>
+              <% (imageLibrary || []).forEach(function(img) { %>
+              <option value="<%= img.url %>"><%= img.name %> (<%= img.source %>)</option>
+              <% }); %>
+            </select>
+            <button type="button" @click="addExistingImage()" class="px-4 py-2 text-sm rounded-lg bg-rose-600 text-white hover:bg-rose-700 whitespace-nowrap">
+              Add
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2" x-show="!loadingLibrary">Available: <span x-text="imageLibrary.length"></span> images</p>
+          <p class="text-xs text-gray-500 mt-2" x-show="loadingLibrary">Loading image library...</p>
+          <p class="text-xs text-gray-600 mt-1" x-show="selectedLibraryImage">
+            Selected: <span class="font-medium" x-text="selectedLibraryImage?.name"></span> (<span x-text="selectedLibraryImage?.source"></span>)
+          </p>
+        </div>
+
         <div class="flex flex-wrap gap-3 mb-4">
           <template x-for="(img, i) in form.images" :key="'saved-' + i">
             <div class="relative w-24 h-24">
@@ -122,6 +142,7 @@
 
 <script>
   const EDIT_PRODUCT = <%- product ? JSON.stringify(product) : 'null' %>;
+  const INITIAL_IMAGE_LIBRARY = <%- JSON.stringify(imageLibrary || []) %>;
 </script>
 
 <%- include('partials/end') %>

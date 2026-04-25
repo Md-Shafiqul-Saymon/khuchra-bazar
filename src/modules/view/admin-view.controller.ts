@@ -6,6 +6,7 @@ import { OrderService } from '../order/order.service';
 import { SettingsService } from '../settings/settings.service';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
 import { S3ImageUrlService } from '../upload/s3-image-url.service';
+import { UploadService } from '../upload/upload.service';
 
 @Controller('admin')
 export class AdminViewController {
@@ -15,7 +16,36 @@ export class AdminViewController {
     private orderService: OrderService,
     private settingsService: SettingsService,
     private s3ImageUrlService: S3ImageUrlService,
+    private uploadService: UploadService,
   ) {}
+
+  private async getImageLibrary() {
+    const [localImages, productImages] = await Promise.all([
+      this.uploadService.listLocalUploadImages(),
+      this.productService.listDistinctImageUrls(),
+    ]);
+
+    const map = new Map<string, { url: string; name: string; source: 'local' | 'product' | 'both' }>();
+
+    for (const img of localImages) {
+      map.set(img.url, { url: img.url, name: img.name, source: 'local' });
+    }
+
+    for (const url of productImages) {
+      const safeUrl = String(url || '').trim();
+      if (!safeUrl) continue;
+      const existing = map.get(safeUrl);
+      const filename = decodeURIComponent(safeUrl.split('?')[0].split('/').pop() || 'image');
+
+      if (!existing) {
+        map.set(safeUrl, { url: safeUrl, name: filename, source: 'product' });
+      } else if (existing.source === 'local') {
+        existing.source = 'both';
+      }
+    }
+
+    return Array.from(map.values());
+  }
 
   @Get('login')
   async loginPage(@Res() res: Response) {
@@ -45,8 +75,11 @@ export class AdminViewController {
   @UseGuards(JwtAuthGuard)
   @Get('products/new')
   async newProduct(@Res() res: Response) {
-    const categories = await this.categoryService.findAll();
-    res.render('admin/product-form', { product: null, categories });
+    const [categories, imageLibrary] = await Promise.all([
+      this.categoryService.findAll(),
+      this.getImageLibrary(),
+    ]);
+    res.render('admin/product-form', { product: null, categories, imageLibrary });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -55,8 +88,11 @@ export class AdminViewController {
     const productRaw = await this.productService.findById(id);
     if (!productRaw) return res.redirect('/admin/products');
     const product = await this.s3ImageUrlService.signProduct(productRaw);
-    const categories = await this.categoryService.findAll();
-    res.render('admin/product-form', { product, categories });
+    const [categories, imageLibrary] = await Promise.all([
+      this.categoryService.findAll(),
+      this.getImageLibrary(),
+    ]);
+    res.render('admin/product-form', { product, categories, imageLibrary });
   }
 
   @UseGuards(JwtAuthGuard)
