@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, type PutObjectCommandInput } from '@aws-sdk/client-s3';
 import { writeFileSync, mkdirSync } from 'fs';
-import { basename, join, posix } from 'path';
+import { basename, dirname, join, posix } from 'path';
 
 @Injectable()
 export class UploadService {
@@ -39,6 +39,26 @@ export class UploadService {
     name = name.replace(/[^a-zA-Z0-9._-]/g, '_');
     if (!name || /^[._-]+$/.test(name)) return `image-${Date.now()}`;
     return name;
+  }
+
+  private normalizeLocalRelPath(key: string): string {
+    return key
+      .split('/')
+      .map((seg) => seg.trim())
+      .filter((seg) => seg && seg !== '.' && seg !== '..')
+      .join('/');
+  }
+
+  private cacheBufferLocally(key: string, buffer: Buffer): string {
+    const relPath = this.normalizeLocalRelPath(key);
+    if (!relPath) {
+      throw new BadRequestException('Invalid storage path');
+    }
+    const rootDir = join(__dirname, '..', '..', '..', 'public');
+    const fullPath = join(rootDir, relPath);
+    mkdirSync(dirname(fullPath), { recursive: true });
+    writeFileSync(fullPath, buffer);
+    return `/${relPath}`;
   }
 
   /** Collapse bad path segments in S3_BASE_URL (e.g. `/../`) and trim slashes. */
@@ -79,6 +99,9 @@ export class UploadService {
       ContentType: file.mimetype,
       CacheControl: 'public, max-age=31536000',
     });
+
+    // Keep a local copy so rendering can serve from project/static first.
+    this.cacheBufferLocally(key, file.buffer);
 
     return this.buildPublicObjectUrl(key);
   }

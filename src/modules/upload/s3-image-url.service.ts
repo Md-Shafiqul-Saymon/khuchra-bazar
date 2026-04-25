@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { UploadService } from './upload.service';
+import { access, mkdir, writeFile } from 'fs/promises';
+import { constants as fsConstants } from 'fs';
+import { dirname, join } from 'path';
 
 @Injectable()
 export class S3ImageUrlService {
@@ -11,8 +14,10 @@ export class S3ImageUrlService {
   private baseUrl: string;
   private expiresIn: number;
   private readonly clientCache = new Map<string, S3Client>();
+  private readonly backfillInFlight = new Map<string, Promise<void>>();
   private readonly accessKeyId: string;
   private readonly secretAccessKey: string;
+  private readonly publicDir: string;
 
   constructor(private config: ConfigService) {
     this.bucket = this.config.get('AWS_S3_BUCKET') || '';
@@ -24,6 +29,7 @@ export class S3ImageUrlService {
     );
     this.accessKeyId = this.config.get('AWS_ACCESS_KEY_ID') || '';
     this.secretAccessKey = this.config.get('AWS_SECRET_ACCESS_KEY') || '';
+    this.publicDir = join(__dirname, '..', '..', '..', 'public');
   }
 
   private escapeRegex(s: string): string {
@@ -88,11 +94,88 @@ export class S3ImageUrlService {
     return this.parseVirtualHostedUrl(url)?.key ?? null;
   }
 
+  private normalizeRelPath(key: string): string {
+    return key
+      .split('/')
+      .map((seg) => seg.trim())
+      .filter((seg) => seg && seg !== '.' && seg !== '..')
+      .join('/');
+  }
+
+  private toLocalPaths(key: string): { rel: string; abs: string } {
+    const rel = this.normalizeRelPath(key);
+    return { rel, abs: join(this.publicDir, rel) };
+  }
+
+  private async localFileExists(absPath: string): Promise<boolean> {
+    try {
+      await access(absPath, fsConstants.F_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async bodyToBuffer(body: any): Promise<Buffer> {
+    if (!body) return Buffer.alloc(0);
+    if (typeof body.transformToByteArray === 'function') {
+      const bytes = await body.transformToByteArray();
+      return Buffer.from(bytes);
+    }
+    const chunks: Buffer[] = [];
+    for await (const chunk of body) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  private async backfillLocalFromS3(key: string, region: string): Promise<boolean> {
+    const safeKey = this.normalizeRelPath(key);
+    if (!safeKey) return false;
+    const { rel, abs } = this.toLocalPaths(safeKey);
+    if (await this.localFileExists(abs)) return true;
+
+    let task = this.backfillInFlight.get(safeKey);
+    if (!task) {
+      task = (async () => {
+        const client = this.getS3Client(region);
+        if (!client) return;
+        const obj = await client.send(new GetObjectCommand({ Bucket: this.bucket, Key: safeKey }));
+        const buf = await this.bodyToBuffer(obj.Body);
+        if (!buf.length) return;
+        await mkdir(dirname(abs), { recursive: true });
+        await writeFile(abs, buf);
+      })();
+      this.backfillInFlight.set(safeKey, task);
+    }
+
+    try {
+      await task;
+    } catch {
+      return false;
+    } finally {
+      this.backfillInFlight.delete(safeKey);
+    }
+
+    return this.localFileExists(abs);
+  }
+
   async signUrl(url: string | undefined | null): Promise<string> {
     if (!url || typeof url !== 'string') return url || '';
+    if (url.startsWith('/')) return url;
     if (!this.bucket) return url;
     const parsed = this.parseVirtualHostedUrl(url);
     if (!parsed) return url;
+
+    const local = this.toLocalPaths(parsed.key);
+    if (local.rel && await this.localFileExists(local.abs)) {
+      return `/${local.rel}`;
+    }
+
+    if (await this.backfillLocalFromS3(parsed.key, parsed.region)) {
+      return `/${local.rel}`;
+    }
+
     const client = this.getS3Client(parsed.region);
     if (!client) return url;
     const cmd = new GetObjectCommand({ Bucket: this.bucket, Key: parsed.key });
