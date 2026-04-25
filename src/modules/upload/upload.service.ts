@@ -54,7 +54,7 @@ export class UploadService {
     if (!relPath) {
       throw new BadRequestException('Invalid storage path');
     }
-    const rootDir = join(__dirname, '..', '..', '..', 'public');
+    const rootDir = join(process.cwd(), 'public');
     const fullPath = join(rootDir, relPath);
     mkdirSync(dirname(fullPath), { recursive: true });
     writeFileSync(fullPath, buffer);
@@ -84,7 +84,7 @@ export class UploadService {
 
     if (!this.bucket) {
       const filename = `${Date.now()}-${safeName}`;
-      const uploadDir = join(__dirname, '..', '..', '..', 'public', 'uploads');
+      const uploadDir = join(process.cwd(), 'public', 'uploads');
       mkdirSync(uploadDir, { recursive: true });
       writeFileSync(join(uploadDir, filename), file.buffer);
       return `/uploads/${filename}`;

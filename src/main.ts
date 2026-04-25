@@ -15,7 +15,7 @@ async function bootstrap() {
   app.set('trust proxy', true);
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  const rootDir = join(__dirname, '..');
+  const rootDir = process.cwd();
   app.setBaseViewsDir(join(rootDir, 'views'));
   app.setViewEngine('ejs');
   app.useStaticAssets(join(rootDir, 'public'), {

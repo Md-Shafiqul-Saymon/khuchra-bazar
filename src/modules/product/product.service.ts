@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Product } from '../../schemas/product.schema';
@@ -7,6 +7,24 @@ import slugify from 'slugify';
 @Injectable()
 export class ProductService {
   constructor(@InjectModel(Product.name) private productModel: Model<Product>) {}
+
+  private buildSlug(source: string): string {
+    return slugify(source, { lower: true, strict: true }) || `product-${Date.now()}`;
+  }
+
+  private async ensureUniqueSlug(source: string, currentId?: string): Promise<string> {
+    const baseSlug = this.buildSlug(source);
+    const filter: any = { slug: baseSlug };
+
+    if (currentId) {
+      filter._id = { $ne: currentId };
+    }
+
+    const existing = await this.productModel.findOne(filter).lean();
+    if (!existing) return baseSlug;
+
+    return `${baseSlug}-${Date.now()}`;
+  }
 
   private normalizeCategoryInput(data: any) {
     if (!Object.prototype.hasOwnProperty.call(data, 'category')) return;
@@ -104,21 +122,33 @@ export class ProductService {
   async create(data: any) {
     this.normalizeCategoryInput(data);
     if (!data.slug) {
-      data.slug = slugify(data.nameEn || data.name, { lower: true, strict: true });
-    }
-    const existing = await this.productModel.findOne({ slug: data.slug });
-    if (existing) {
-      data.slug = `${data.slug}-${Date.now()}`;
+      data.slug = await this.ensureUniqueSlug(data.nameEn || data.name);
+    } else {
+      data.slug = await this.ensureUniqueSlug(data.slug);
     }
     return this.productModel.create(data);
   }
 
   async update(id: string, data: any) {
     this.normalizeCategoryInput(data);
-    if (data.nameEn && !data.slug) {
-      data.slug = slugify(data.nameEn || data.name, { lower: true, strict: true });
+    if (data.slug) {
+      data.slug = await this.ensureUniqueSlug(data.slug, id);
+    } else if (data.nameEn || data.name) {
+      data.slug = await this.ensureUniqueSlug(data.nameEn || data.name, id);
     }
-    return this.productModel.findByIdAndUpdate(id, data, { new: true });
+
+    try {
+      return await this.productModel.findByIdAndUpdate(id, data, {
+        new: true,
+        runValidators: true,
+      });
+    } catch (error: any) {
+      const isDuplicateKey = error?.code === 11000 || String(error?.message || '').includes('E11000');
+      if (isDuplicateKey) {
+        throw new BadRequestException('A product with the same slug already exists');
+      }
+      throw error;
+    }
   }
 
   async delete(id: string) {

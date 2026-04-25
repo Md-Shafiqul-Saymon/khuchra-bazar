@@ -29,7 +29,7 @@ export class S3ImageUrlService {
     );
     this.accessKeyId = this.config.get('AWS_ACCESS_KEY_ID') || '';
     this.secretAccessKey = this.config.get('AWS_SECRET_ACCESS_KEY') || '';
-    this.publicDir = join(__dirname, '..', '..', '..', 'public');
+    this.publicDir = join(process.cwd(), 'public');
   }
 
   private escapeRegex(s: string): string {

@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
     app.set('trust proxy', true);
     app.useGlobalFilters(new GlobalExceptionFilter());
 
-    const rootDir = path.join(__dirname, '..');
+    const rootDir = process.cwd();
     app.setBaseViewsDir(path.join(rootDir, 'views'));
     app.setViewEngine('ejs');
     app.useStaticAssets(path.join(rootDir, 'public'), {
