@@ -1,101 +1,167 @@
 <%- include('partials/sidebar', { pageTitle: 'Settings' }) %>
 
 <div x-data="settingsPage()" x-init="init()">
-  <h1 class="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
 
-  <template x-if="success">
-    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg mb-4 text-sm" x-text="success"></div>
-  </template>
-
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="font-semibold mb-4">General</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Site Name</label>
-          <input type="text" x-model="form.siteName" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Announcement Bar</label>
-          <input type="text" x-model="form.announcementBar" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-      </div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Settings</h1>
+      <p class="text-sm text-gray-400 mt-0.5">Configure your store</p>
     </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="font-semibold mb-4">Contact</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-          <input type="text" x-model="form.contactPhone" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input type="text" x-model="form.contactEmail" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-          <input type="text" x-model="form.address" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="font-semibold mb-4">Delivery Charges</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Dhaka Inside (৳)</label>
-          <input type="number" x-model.number="form.deliveryChargeDhakaInside" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Dhaka Outside (৳)</label>
-          <input type="number" x-model.number="form.deliveryChargeDhakaOutside" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Express (৳)</label>
-          <input type="number" x-model.number="form.deliveryChargeExpress" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="font-semibold mb-4">Analytics</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Meta (Facebook) Pixel ID</label>
-          <input type="text" x-model="form.metaPixelId" placeholder="e.g. 123456789012345"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-          <p class="text-xs text-gray-500 mt-1">Numeric ID from Meta Events Manager. Overrides <code class="bg-gray-100 px-1 rounded">META_PIXEL_ID</code> in .env when set.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm p-6">
-      <h2 class="font-semibold mb-4">Social Links</h2>
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Facebook URL</label>
-          <input type="text" x-model="form.socialLinks.facebook" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Instagram URL</label>
-          <input type="text" x-model="form.socialLinks.instagram" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">YouTube URL</label>
-          <input type="text" x-model="form.socialLinks.youtube" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-500">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mt-6">
     <button @click="save()" :disabled="saving"
-      class="bg-rose-600 hover:bg-rose-700 disabled:bg-gray-400 text-white px-8 py-2.5 rounded-xl font-semibold transition">
-      <span x-show="!saving">Save Settings</span>
-      <span x-show="saving">Saving...</span>
+      class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 disabled:bg-gray-200 disabled:text-gray-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-rose-200">
+      <svg x-show="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      <svg x-show="!saving" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <span x-text="saving ? 'Saving...' : (success ? 'Saved!' : 'Save Changes')"></span>
     </button>
   </div>
+
+  <div x-show="success" x-cloak
+    class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl mb-5 text-sm font-medium">
+    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    <span x-text="success"></span>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+    <!-- General -->
+    <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-6">
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="stat-icon bg-gray-100">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        </div>
+        <h2 class="font-semibold text-gray-800">General</h2>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Site Name</label>
+          <input type="text" x-model="form.siteName"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Announcement Bar</label>
+          <input type="text" x-model="form.announcementBar"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+          <p class="text-xs text-gray-400 mt-1.5">Shows as a banner at the top of the storefront</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-6">
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="stat-icon bg-blue-50">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        </div>
+        <h2 class="font-semibold text-gray-800">Contact Info</h2>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Phone</label>
+          <input type="text" x-model="form.contactPhone"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
+          <input type="text" x-model="form.contactEmail"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Address</label>
+          <input type="text" x-model="form.address"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery -->
+    <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-6">
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="stat-icon bg-violet-50">
+          <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+        </div>
+        <h2 class="font-semibold text-gray-800">Delivery Charges</h2>
+      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Dhaka Inside (৳)</label>
+            <input type="number" x-model.number="form.deliveryChargeDhakaInside"
+              class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Dhaka Outside (৳)</label>
+            <input type="number" x-model.number="form.deliveryChargeDhakaOutside"
+              class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Express (৳)</label>
+          <input type="number" x-model.number="form.deliveryChargeExpress"
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-6">
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="stat-icon bg-blue-50">
+          <svg class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </div>
+        <div>
+          <h2 class="font-semibold text-gray-800">Meta Pixel</h2>
+          <p class="text-xs text-gray-400">Facebook / Instagram ads tracking</p>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Pixel ID</label>
+        <input type="text" x-model="form.metaPixelId" placeholder="e.g. 123456789012345"
+          class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all font-mono">
+        <p class="text-xs text-gray-400 mt-2">
+          Numeric ID from Meta Events Manager.
+          Overrides <code class="bg-gray-100 px-1 rounded font-mono">META_PIXEL_ID</code> env var when set.
+        </p>
+      </div>
+      <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+        <p class="text-xs font-semibold text-blue-700 mb-1.5">Tracked events</p>
+        <div class="flex flex-wrap gap-1">
+          <% ['PageView','ViewContent','AddToCart','InitiateCheckout','Purchase','Search'].forEach(function(ev){ %>
+            <span class="text-xs bg-white text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full font-medium"><%= ev %></span>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Links -->
+    <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-6 lg:col-span-2">
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="stat-icon bg-rose-50">
+          <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        </div>
+        <h2 class="font-semibold text-gray-800">Social Links</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Facebook</label>
+          <input type="url" x-model="form.socialLinks.facebook" placeholder="https://facebook.com/..."
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Instagram</label>
+          <input type="url" x-model="form.socialLinks.instagram" placeholder="https://instagram.com/..."
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">YouTube</label>
+          <input type="url" x-model="form.socialLinks.youtube" placeholder="https://youtube.com/..."
+            class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
 </div>
 
 <script>

@@ -1,68 +1,190 @@
 <%- include('partials/sidebar', { pageTitle: 'Order ' + order.orderNumber }) %>
 
-<div x-data="{ status: '<%= order.status %>' }">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">Order #<%= order.orderNumber %></h1>
-    <a href="/admin/orders" class="text-sm text-gray-500 hover:text-gray-700">&larr; Back to Orders</a>
+<%
+  const statuses = ['pending','confirmed','shipped','delivered'];
+  const curIdx = statuses.indexOf(order.status);
+  const isCancelled = order.status === 'cancelled';
+%>
+
+<div x-data="{ status: '<%= order.status %>', saving: false, saved: false }">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-1">
+        <a href="/admin/orders" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="text-xl font-bold text-gray-900 font-mono"><%= order.orderNumber %></h1>
+        <span class="text-xs pill-<%= order.status %> px-2.5 py-1 rounded-full font-semibold">
+          <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+        </span>
+      </div>
+      <p class="text-sm text-gray-400 pl-8">
+        <%= new Date(order.createdAt).toLocaleString('en-GB', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-2xl font-bold text-gray-900">৳ <%= order.total.toLocaleString() %></span>
+    </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 space-y-6">
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="font-semibold mb-4">Order Items</h2>
-        <div class="space-y-3">
-          <% order.items.forEach(function(item) { %>
-          <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-            <% if (item.image) { %>
-            <img src="<%= item.image %>" alt="" class="w-14 h-14 rounded-lg object-cover">
+  <!-- Order Status Tracker -->
+  <% if(!isCancelled){ %>
+  <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-5 mb-5">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Order Progress</p>
+    <div class="flex items-start">
+      <% statuses.forEach(function(s, i){ %>
+        <div class="flex-1 flex flex-col items-center relative">
+          <!-- Connector line left -->
+          <% if(i > 0){ %>
+          <div class="absolute left-0 right-1/2 top-4 h-0.5 -translate-y-1/2
+            <%= i <= curIdx ? 'bg-rose-500' : 'bg-gray-200' %>"></div>
+          <% } %>
+          <!-- Connector line right -->
+          <% if(i < statuses.length - 1){ %>
+          <div class="absolute left-1/2 right-0 top-4 h-0.5 -translate-y-1/2
+            <%= i < curIdx ? 'bg-rose-500' : 'bg-gray-200' %>"></div>
+          <% } %>
+          <!-- Circle -->
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10 ring-2 ring-white
+            <%= i < curIdx  ? 'bg-emerald-500 text-white' :
+               i === curIdx ? 'bg-rose-600 text-white shadow-lg shadow-rose-200' :
+                              'bg-gray-100 text-gray-400 ring-gray-100' %>">
+            <% if(i < curIdx){ %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <% } else { %>
+              <%= i + 1 %>
             <% } %>
-            <div class="flex-1">
-              <p class="font-medium"><%= item.name %></p>
-              <p class="text-sm text-gray-500">৳<%= item.price %> x <%= item.quantity %></p>
+          </div>
+          <!-- Label -->
+          <p class="mt-2 text-xs font-semibold text-center
+            <%= i === curIdx ? 'text-rose-600' : i < curIdx ? 'text-emerald-600' : 'text-gray-400' %>">
+            <%= s.charAt(0).toUpperCase() + s.slice(1) %>
+          </p>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Left: Order items + summary -->
+    <div class="lg:col-span-2 space-y-5">
+
+      <!-- Items -->
+      <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-5">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Order Items</p>
+        <div class="space-y-3">
+          <% order.items.forEach(function(item){ %>
+          <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+            <% if(item.image){ %>
+              <img src="<%= item.image %>" alt="" class="w-14 h-14 rounded-xl object-cover ring-1 ring-black/5 shrink-0">
+            <% } else { %>
+              <div class="w-14 h-14 rounded-xl bg-gray-200 flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>
+              </div>
+            <% } %>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-gray-800 text-sm"><%= item.name %></p>
+              <p class="text-xs text-gray-400 mt-0.5">৳ <%= item.price.toLocaleString() %> × <%= item.quantity %></p>
             </div>
-            <p class="font-bold">৳ <%= item.price * item.quantity %></p>
+            <p class="font-bold text-gray-800 shrink-0">৳ <%= (item.price * item.quantity).toLocaleString() %></p>
           </div>
           <% }); %>
         </div>
 
-        <div class="border-t mt-4 pt-4 space-y-2 text-sm">
-          <div class="flex justify-between"><span>Subtotal</span><span class="font-medium">৳ <%= order.subtotal %></span></div>
-          <div class="flex justify-between"><span>Delivery (<%= order.deliveryArea %>)</span><span class="font-medium">৳ <%= order.deliveryCharge %></span></div>
-          <div class="flex justify-between text-lg font-bold border-t pt-2"><span>Total</span><span class="text-rose-600">৳ <%= order.total %></span></div>
+        <!-- Price breakdown -->
+        <div class="border-t border-gray-100 mt-4 pt-4 space-y-2.5">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Subtotal</span>
+            <span class="font-medium text-gray-700">৳ <%= order.subtotal.toLocaleString() %></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Delivery (<%= order.deliveryArea %>)</span>
+            <span class="font-medium text-gray-700">৳ <%= order.deliveryCharge.toLocaleString() %></span>
+          </div>
+          <% if(order.note){ %>
+          <div class="text-xs text-gray-400 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+            <span class="font-semibold text-amber-700">Note: </span><%= order.note %>
+          </div>
+          <% } %>
+          <div class="flex justify-between text-base font-bold border-t border-gray-100 pt-2.5 mt-1">
+            <span class="text-gray-800">Total</span>
+            <span class="text-rose-600">৳ <%= order.total.toLocaleString() %></span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="space-y-6">
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="font-semibold mb-4">Customer Info</h2>
+    <!-- Right: Customer + Status update -->
+    <div class="space-y-5">
+
+      <!-- Customer info -->
+      <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-5">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Customer</p>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 font-bold text-sm shrink-0">
+            <%= order.customerName ? order.customerName.charAt(0).toUpperCase() : '?' %>
+          </div>
+          <div>
+            <p class="font-semibold text-gray-800"><%= order.customerName %></p>
+            <p class="text-xs text-gray-400"><%= order.customerPhone %></p>
+          </div>
+        </div>
         <div class="space-y-3 text-sm">
-          <div><span class="text-gray-500">Name</span><p class="font-medium"><%= order.customerName %></p></div>
-          <div><span class="text-gray-500">Phone</span><p class="font-medium"><%= order.customerPhone %></p></div>
-          <div><span class="text-gray-500">Address</span><p class="font-medium"><%= order.customerAddress %></p></div>
-          <div><span class="text-gray-500">Date</span><p class="font-medium"><%= new Date(order.createdAt).toLocaleString('bn-BD') %></p></div>
+          <div class="flex gap-2">
+            <svg class="w-4 h-4 text-gray-300 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="text-gray-600"><%= order.customerAddress %></span>
+          </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <h2 class="font-semibold mb-4">Update Status</h2>
-        <select x-model="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-rose-500">
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <button @click="
-          fetch('/api/orders/<%= order._id %>/status', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getCookie('admin_token') },
-            body: JSON.stringify({ status })
-          }).then(() => window.location.reload())
-        " class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg text-sm font-medium transition">Update Status</button>
+      <!-- Update status -->
+      <div class="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-5">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Update Status</p>
+        <div class="space-y-2.5">
+          <% statuses.concat(['cancelled']).forEach(function(s){ %>
+          <button @click="
+            status = '<%= s %>';
+            saving = true;
+            saved = false;
+            fetch('/api/orders/<%= order._id %>/status', {
+              method: 'PUT',
+              headers: authHeaders(),
+              body: JSON.stringify({ status: '<%= s %>' })
+            }).then(r => r.json()).then(() => { saving = false; saved = true; setTimeout(()=>window.location.reload(),600); });
+          "
+            :class="status === '<%= s %>' ? 'pill-<%= s %> ring-1 ring-current/30 font-semibold' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'"
+            class="w-full px-4 py-2.5 rounded-xl text-sm transition-all text-left flex items-center gap-2">
+            <span class="flex-1 capitalize"><%= s %></span>
+            <span x-show="status === '<%= s %>'" class="text-xs opacity-60">current</span>
+          </button>
+          <% }); %>
+        </div>
+
+        <div class="mt-4">
+          <button @click="
+            saving = true;
+            saved = false;
+            fetch('/api/orders/<%= order._id %>/status', {
+              method: 'PUT',
+              headers: authHeaders(),
+              body: JSON.stringify({ status })
+            }).then(r => r.json()).then(() => { saving = false; saved = true; setTimeout(()=>window.location.reload(),700); });
+          " :disabled="saving"
+            class="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-gray-200 disabled:text-gray-400 text-white py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2">
+            <svg x-show="saving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            <svg x-show="saved" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            <span x-text="saving ? 'Saving...' : saved ? 'Saved!' : 'Save Status'"></span>
+          </button>
+        </div>
       </div>
+
     </div>
   </div>
+
 </div>
 
 <%- include('partials/end') %>

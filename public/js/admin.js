@@ -1,3 +1,62 @@
+function dashboard() {
+  return {
+    today: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+    chartData: [],
+    syncing: false,
+    syncResult: null,
+    syncError: '',
+
+    get chartMax() {
+      return Math.max(...this.chartData.map((d) => d.revenue), 1);
+    },
+    get chart7DayTotal() {
+      return this.chartData.reduce((s, d) => s + d.revenue, 0);
+    },
+    get chartDailyAvg() {
+      const days = this.chartData.filter((d) => d.revenue > 0).length || 1;
+      return Math.round(this.chart7DayTotal / days);
+    },
+    get chartPeakDay() {
+      if (!this.chartData.length) return '—';
+      const peak = this.chartData.reduce((a, b) => (b.revenue > a.revenue ? b : a));
+      return peak.revenue > 0 ? peak.date : '—';
+    },
+
+    init() {
+      if (typeof DASHBOARD_DATA !== 'undefined' && DASHBOARD_DATA.last7Days) {
+        this.chartData = DASHBOARD_DATA.last7Days;
+      }
+    },
+    barPct(revenue) {
+      return Math.max(Math.round((revenue / this.chartMax) * 100), revenue > 0 ? 5 : 1);
+    },
+    fmtK(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return String(n);
+    },
+    async syncS3() {
+      this.syncing = true;
+      this.syncResult = null;
+      this.syncError = '';
+      try {
+        const res = await fetch('/api/upload/sync-s3', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + getCookie('admin_token') },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          this.syncResult = data;
+        } else {
+          this.syncError = data.message || 'Sync failed';
+        }
+      } catch {
+        this.syncError = 'Connection error';
+      }
+      this.syncing = false;
+    },
+  };
+}
+
 function getCookie(name) {
   const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : null;

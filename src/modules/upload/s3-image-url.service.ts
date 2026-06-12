@@ -213,4 +213,34 @@ export class S3ImageUrlService {
     );
     return { ...order, items };
   }
+
+  async syncProductImages(
+    imageUrls: string[],
+  ): Promise<{ total: number; synced: number; alreadyLocal: number; failed: number }> {
+    const dedupedUrls = [
+      ...new Set(
+        imageUrls.filter(
+          (u) => u && typeof u === 'string' && !u.startsWith('/') && !!this.parseVirtualHostedUrl(u),
+        ),
+      ),
+    ];
+
+    let synced = 0;
+    let alreadyLocal = 0;
+    let failed = 0;
+
+    await Promise.allSettled(
+      dedupedUrls.map(async (url) => {
+        const parsed = this.parseVirtualHostedUrl(url);
+        if (!parsed) { failed++; return; }
+        const { rel, abs } = this.toLocalPaths(parsed.key);
+        if (!rel) { failed++; return; }
+        if (await this.localFileExists(abs)) { alreadyLocal++; return; }
+        const ok = await this.backfillLocalFromS3(parsed.key, parsed.region);
+        if (ok) synced++; else failed++;
+      }),
+    );
+
+    return { total: dedupedUrls.length, synced, alreadyLocal, failed };
+  }
 }

@@ -55,9 +55,14 @@ export class AdminViewController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async dashboard(@Res() res: Response) {
-    const stats = await this.orderService.getStats();
-    const productCount = await this.productService.count();
-    res.render('admin/dashboard', { stats, productCount });
+    const [stats, productCount, settings] = await Promise.all([
+      this.orderService.getStats(),
+      this.productService.count(),
+      this.settingsService.get(),
+    ]);
+    const pixelConfigured = !!(settings?.metaPixelId || process.env.META_PIXEL_ID);
+    const s3Configured = !!process.env.AWS_S3_BUCKET;
+    res.render('admin/dashboard', { stats, productCount, pixelConfigured, s3Configured });
   }
 
   @UseGuards(JwtAuthGuard)

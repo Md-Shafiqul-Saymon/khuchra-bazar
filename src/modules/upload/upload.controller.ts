@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
+import { S3ImageUrlService } from './s3-image-url.service';
 import { JwtAuthGuard } from '../admin/jwt-auth.guard';
 import { ProductService } from '../product/product.service';
 
@@ -12,6 +13,7 @@ export class UploadController {
   constructor(
     private readonly uploadService: UploadService,
     private readonly productService: ProductService,
+    private readonly s3ImageUrlService: S3ImageUrlService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -62,5 +64,12 @@ export class UploadController {
     const list = Array.isArray(files) ? files : files ? [files] : [];
     const urls = await this.uploadService.uploadMultiple(list);
     return { urls };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('sync-s3')
+  async syncS3() {
+    const imageUrls = await this.productService.listDistinctImageUrls(5000);
+    return this.s3ImageUrlService.syncProductImages(imageUrls);
   }
 }
