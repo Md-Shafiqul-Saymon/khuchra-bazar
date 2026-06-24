@@ -14,9 +14,10 @@ import { ViewModule } from './modules/view/view.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRoot(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 180000,
       socketTimeoutMS: 45000,
-      bufferCommands: false,
+      connectTimeoutMS: 180000,
+      bufferCommands: true,
     }),
     ProductModule,
     CategoryModule,

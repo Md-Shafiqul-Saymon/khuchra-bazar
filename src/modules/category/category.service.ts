@@ -6,10 +6,16 @@ import slugify from 'slugify';
 
 @Injectable()
 export class CategoryService {
+  private cache: { data: any[]; at: number } | null = null;
+  private readonly TTL = 120_000;
+
   constructor(@InjectModel(Category.name) private categoryModel: Model<Category>) {}
 
   async findAll() {
-    return this.categoryModel.find().sort({ sortOrder: 1, name: 1 }).lean();
+    if (this.cache && Date.now() - this.cache.at < this.TTL) return this.cache.data;
+    const data = await this.categoryModel.find().sort({ sortOrder: 1, name: 1 }).lean();
+    this.cache = { data, at: Date.now() };
+    return data;
   }
 
   async findById(id: string) {
@@ -24,14 +30,20 @@ export class CategoryService {
     if (!data.slug) {
       data.slug = slugify(data.name, { lower: true, strict: true });
     }
-    return this.categoryModel.create(data);
+    const result = await this.categoryModel.create(data);
+    this.cache = null;
+    return result;
   }
 
   async update(id: string, data: any) {
-    return this.categoryModel.findByIdAndUpdate(id, data, { new: true });
+    const result = await this.categoryModel.findByIdAndUpdate(id, data, { new: true });
+    this.cache = null;
+    return result;
   }
 
   async delete(id: string) {
-    return this.categoryModel.findByIdAndDelete(id);
+    const result = await this.categoryModel.findByIdAndDelete(id);
+    this.cache = null;
+    return result;
   }
 }

@@ -5,6 +5,9 @@ import { Settings } from '../../schemas/settings.schema';
 
 @Injectable()
 export class SettingsService {
+  private cache: { data: any; at: number } | null = null;
+  private readonly TTL = 120_000;
+
   constructor(@InjectModel(Settings.name) private settingsModel: Model<Settings>) {}
 
   async seed() {
@@ -25,10 +28,14 @@ export class SettingsService {
   }
 
   async get() {
-    return this.settingsModel.findOne().lean();
+    if (this.cache && Date.now() - this.cache.at < this.TTL) return this.cache.data;
+    const data = await this.settingsModel.findOne().lean();
+    this.cache = { data, at: Date.now() };
+    return data;
   }
 
   async update(data: any) {
+    this.cache = null;
     return this.settingsModel.findOneAndUpdate({}, data, { new: true, upsert: true });
   }
 }

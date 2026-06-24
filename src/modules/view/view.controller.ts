@@ -39,31 +39,42 @@ export class ViewController {
 
   @Get()
   async home(@Req() req: Request, @Res() res: Response, @Query('page') page: string) {
-    const settings = await this.settingsView();
-    const categories = await this.categoryService.findAll();
-    const flashSaleRaw = await this.productService.findFlashSale();
-    const flashSale = await this.s3ImageUrlService.signProducts(flashSaleRaw);
-    const { products: productsRaw, total, pages } = await this.productService.findAll({
-      page: parseInt(page) || 1,
-      limit: 20,
-    });
-    const products = await this.s3ImageUrlService.signProducts(productsRaw);
-    const cartCount = await this.cartService.getItemCount(this.getIp(req));
+    const pageNum = parseInt(page) || 1;
+    const ip = this.getIp(req);
+
+    const [settings, categories, flashSaleRaw, { products: productsRaw, total, pages }, cartCount] =
+      await Promise.all([
+        this.settingsView(),
+        this.categoryService.findAll(),
+        this.productService.findFlashSale(),
+        this.productService.findAll({ page: pageNum, limit: 20 }),
+        this.cartService.getItemCount(ip),
+      ]);
+
+    const [flashSale, products] = await Promise.all([
+      this.s3ImageUrlService.signProducts(flashSaleRaw),
+      this.s3ImageUrlService.signProducts(productsRaw),
+    ]);
 
     res.render('pages/home', {
       settings, categories, flashSale, products, total, pages,
-      currentPage: parseInt(page) || 1, cartCount,
+      currentPage: pageNum, cartCount,
       metaPixel: this.getMetaPixel(settings),
     });
   }
 
   @Get('product/:slug')
   async productDetail(@Req() req: Request, @Res() res: Response, @Param('slug') slug: string) {
-    const settings = await this.settingsView();
-    const productRaw = await this.productService.findBySlug(slug);
+    const ip = this.getIp(req);
+
+    const [settings, categories, productRaw, cartCount] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.productService.findBySlug(slug),
+      this.cartService.getItemCount(ip),
+    ]);
+
     if (!productRaw) {
-      const categories = await this.categoryService.findAll();
-      const cartCount = await this.cartService.getItemCount(this.getIp(req));
       return res.status(404).render('pages/404', {
         settings, categories, cartCount,
         metaPixel: this.getMetaPixel(settings),
@@ -76,70 +87,92 @@ export class ViewController {
       ? await this.productService.findRelated(catId.toString(), product!._id.toString())
       : [];
     const related = await this.s3ImageUrlService.signProducts(relatedRaw);
-    const cartCount = await this.cartService.getItemCount(this.getIp(req));
-    const categories = await this.categoryService.findAll();
 
-    res.render('pages/product-detail', { settings, product, related, cartCount, categories, metaPixel: this.getMetaPixel(settings) });
+    res.render('pages/product-detail', {
+      settings, product, related, cartCount, categories,
+      metaPixel: this.getMetaPixel(settings),
+    });
   }
 
   @Get('cart')
   async cart(@Req() req: Request, @Res() res: Response) {
-    const settings = await this.settingsView();
-    const cart = await this.cartService.getCartWithProducts(this.getIp(req));
-    const categories = await this.categoryService.findAll();
+    const [settings, categories, cart] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.cartService.getCartWithProducts(this.getIp(req)),
+    ]);
 
-    res.render('pages/cart', { settings, cart, cartCount: cart.totalItems, categories, metaPixel: this.getMetaPixel(settings) });
+    res.render('pages/cart', {
+      settings, cart, cartCount: cart.totalItems, categories,
+      metaPixel: this.getMetaPixel(settings),
+    });
   }
 
   @Get('checkout')
   async checkout(@Req() req: Request, @Res() res: Response) {
-    const settings = await this.settingsView();
-    const cart = await this.cartService.getCartWithProducts(this.getIp(req));
-    const categories = await this.categoryService.findAll();
+    const [settings, categories, cart] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.cartService.getCartWithProducts(this.getIp(req)),
+    ]);
 
     if (!cart.items.length) return res.redirect('/cart');
 
-    res.render('pages/checkout', { settings, cart, cartCount: cart.totalItems, categories, metaPixel: this.getMetaPixel(settings) });
+    res.render('pages/checkout', {
+      settings, cart, cartCount: cart.totalItems, categories,
+      metaPixel: this.getMetaPixel(settings),
+    });
   }
 
   @Get('order-success/:id')
   async orderSuccess(@Req() req: Request, @Res() res: Response, @Param('id') id: string) {
-    const settings = await this.settingsView();
-    const order = await this.orderService.findById(id);
+    const [settings, categories, order] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.orderService.findById(id),
+    ]);
+
     if (!order) {
-      const categories = await this.categoryService.findAll();
       const cartCount = await this.cartService.getItemCount(this.getIp(req));
       return res.status(404).render('pages/404', {
         settings, categories, cartCount,
         metaPixel: this.getMetaPixel(settings),
       });
     }
-    const categories = await this.categoryService.findAll();
 
-    res.render('pages/order-success', { settings, order, cartCount: 0, categories, metaPixel: this.getMetaPixel(settings) });
+    res.render('pages/order-success', {
+      settings, order, cartCount: 0, categories,
+      metaPixel: this.getMetaPixel(settings),
+    });
   }
 
   @Get('search')
-  async search(@Req() req: Request, @Res() res: Response, @Query('q') q: string, @Query('page') page: string) {
-    const settings = await this.settingsView();
-    const categories = await this.categoryService.findAll();
-    const cartCount = await this.cartService.getItemCount(this.getIp(req));
+  async search(
+    @Req() req: Request, @Res() res: Response,
+    @Query('q') q: string, @Query('page') page: string,
+  ) {
+    const pageNum = parseInt(page) || 1;
+    const ip = this.getIp(req);
+
+    const [settings, categories, cartCount] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.cartService.getItemCount(ip),
+    ]);
 
     let products: any[] = [], total = 0, pages = 0;
     if (q) {
-      const result = await this.productService.findAll({
-        page: parseInt(page) || 1,
-        limit: 20,
-        search: q,
-      });
-      products = await this.s3ImageUrlService.signProducts(result.products);
-      total = result.total;
-      pages = result.pages;
+      const result = await this.productService.findAll({ page: pageNum, limit: 20, search: q });
+      [products, total, pages] = [
+        await this.s3ImageUrlService.signProducts(result.products),
+        result.total,
+        result.pages,
+      ];
     }
 
     res.render('pages/search', {
       settings, products, total, pages, q,
-      currentPage: parseInt(page) || 1, cartCount, categories,
+      currentPage: pageNum, cartCount, categories,
       metaPixel: this.getMetaPixel(settings),
     });
   }
@@ -149,11 +182,17 @@ export class ViewController {
     @Req() req: Request, @Res() res: Response,
     @Param('slug') slug: string, @Query('page') page: string,
   ) {
-    const settings = await this.settingsView();
-    const categories = await this.categoryService.findAll();
-    const category = await this.categoryService.findBySlug(slug);
+    const pageNum = parseInt(page) || 1;
+    const ip = this.getIp(req);
+
+    const [settings, categories, category, cartCount] = await Promise.all([
+      this.settingsView(),
+      this.categoryService.findAll(),
+      this.categoryService.findBySlug(slug),
+      this.cartService.getItemCount(ip),
+    ]);
+
     if (!category) {
-      const cartCount = await this.cartService.getItemCount(this.getIp(req));
       return res.status(404).render('pages/404', {
         settings, categories, cartCount,
         metaPixel: this.getMetaPixel(settings),
@@ -161,16 +200,15 @@ export class ViewController {
     }
 
     const { products: productsRaw, total, pages } = await this.productService.findAll({
-      page: parseInt(page) || 1,
+      page: pageNum,
       limit: 20,
       category: (category as any)._id,
     });
     const products = await this.s3ImageUrlService.signProducts(productsRaw);
-    const cartCount = await this.cartService.getItemCount(this.getIp(req));
 
     res.render('pages/category', {
       settings, category, categories, products, total, pages,
-      currentPage: parseInt(page) || 1, cartCount,
+      currentPage: pageNum, cartCount,
       metaPixel: this.getMetaPixel(settings),
     });
   }

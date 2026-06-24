@@ -74,15 +74,15 @@
         </div>
 
         <div class="flex gap-3 flex-wrap">
-          <button @click="addToCart('<%= product._id %>', qty)"
+          <button @click="buyNow('<%= product._id %>', qty, $el)"
             class="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-3 rounded-xl font-semibold transition text-lg"
             <%= product.stock <= 0 ? 'disabled' : '' %>>
-            কার্টে যোগ করুন
-          </button>
-          <button @click="buyNow('<%= product._id %>', qty)"
-            class="flex-1 bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-xl font-semibold transition text-lg"
-            <%= product.stock <= 0 ? 'disabled' : '' %>>
             এখনই অর্ডার করুন
+          </button>
+          <button @click="addToCart('<%= product._id %>', qty, $el)"
+            class="flex-1 bg-white hover:bg-rose-50 text-rose-600 border-2 border-rose-500 py-3 rounded-xl font-semibold transition text-lg"
+            <%= product.stock <= 0 ? 'disabled' : '' %>>
+            + কার্টে যোগ করুন
           </button>
         </div>
 
@@ -175,7 +175,7 @@
             <% } %>
           </div>
 
-          <button onclick="addToCart('<%= item._id %>', 1)" class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-md">
+          <button onclick="addToCart('<%= item._id %>', 1, this)" class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold py-2 rounded-md">
             কার্টে যোগ করুন
           </button>
         </div>
