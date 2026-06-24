@@ -233,7 +233,10 @@ function checkoutPage() {
     loading: false,
     error: '',
     get deliveryCharge() {
-      return (typeof DELIVERY_CHARGES !== 'undefined' && DELIVERY_CHARGES[this.form.deliveryArea]) || 130;
+      if (typeof DELIVERY_CHARGES !== 'undefined' && this.form.deliveryArea in DELIVERY_CHARGES) {
+        return DELIVERY_CHARGES[this.form.deliveryArea];
+      }
+      return 130;
     },
     async placeOrder() {
       this.error = '';

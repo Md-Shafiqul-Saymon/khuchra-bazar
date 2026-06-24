@@ -122,7 +122,11 @@
           </div>
           <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2">
             <span>মোট</span>
+            <% if (settings?.freeDelivery) { %>
+            <span class="text-rose-600">৳ <%= cart.subtotal %></span>
+            <% } else { %>
             <span class="text-rose-600" x-text="'৳ ' + (<%= cart.subtotal %> + deliveryCharge)"></span>
+            <% } %>
           </div>
         </div>
 
