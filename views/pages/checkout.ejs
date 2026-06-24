@@ -38,17 +38,17 @@
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'dhaka-inside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
               <input type="radio" x-model="form.deliveryArea" value="dhaka-inside" class="text-rose-600">
-              <span>ঢাকার ভিতরে (৳ <%= settings?.deliveryChargeDhakaInside || 130 %>)</span>
+              <span>ঢাকার বাইরে (<%= settings?.deliveryChargeDhakaInside || 130 %> Tk)</span>
             </label>
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'dhaka-outside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
               <input type="radio" x-model="form.deliveryArea" value="dhaka-outside" class="text-rose-600">
-              <span>ঢাকার বাইরে (সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) (৳ <%= settings?.deliveryChargeDhakaOutside || 100 %>)</span>
+              <span>ঢাকার বাইরে( সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) (<%= settings?.deliveryChargeDhakaOutside || 100 %> Tk)</span>
             </label>
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'express' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
               <input type="radio" x-model="form.deliveryArea" value="express" class="text-rose-600">
-              <span>এক্সপ্রেস ডেলিভারি (৳ <%= settings?.deliveryChargeExpress || 60 %>)</span>
+              <span>ঢাকার ভিতরে (<%= settings?.deliveryChargeExpress || 60 %> Tk)</span>
             </label>
           </div>
         </div>
@@ -111,9 +111,9 @@
 
 <script>
   const DELIVERY_CHARGES = {
-    'dhaka-inside': <%= settings?.deliveryChargeDhakaInside || 130 %>,
+    'dhaka-inside':  <%= settings?.deliveryChargeDhakaInside || 130 %>,
     'dhaka-outside': <%= settings?.deliveryChargeDhakaOutside || 100 %>,
-    'express': <%= settings?.deliveryChargeExpress || 60 %>,
+    'express':       <%= settings?.deliveryChargeExpress || 60 %>,
   };
 
   if (typeof window.trackInitiateCheckout === 'function') {
