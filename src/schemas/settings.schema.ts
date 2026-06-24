@@ -36,6 +36,9 @@ export class Settings extends Document {
 
   @Prop({ default: 60 })
   deliveryChargeExpress: number;
+
+  @Prop({ default: false })
+  freeDelivery: boolean;
 }
 
 export const SettingsSchema = SchemaFactory.createForClass(Settings);

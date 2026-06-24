@@ -41,9 +41,12 @@ export class OrderController {
     }
 
     const settings = await this.settingsService.get();
-    let deliveryCharge = settings.deliveryChargeDhakaInside;
-    if (deliveryArea === 'dhaka-outside') deliveryCharge = settings.deliveryChargeDhakaOutside;
-    if (deliveryArea === 'express') deliveryCharge = settings.deliveryChargeExpress;
+    let deliveryCharge = 0;
+    if (!settings.freeDelivery) {
+      deliveryCharge = settings.deliveryChargeDhakaInside;
+      if (deliveryArea === 'dhaka-outside') deliveryCharge = settings.deliveryChargeDhakaOutside;
+      if (deliveryArea === 'express') deliveryCharge = settings.deliveryChargeExpress;
+    }
 
     const order = await this.orderService.create({
       customerName,

@@ -250,6 +250,7 @@ function settingsPage() {
       address: '', metaPixelId: '',
       socialLinks: { facebook: '', instagram: '', youtube: '' },
       deliveryChargeDhakaInside: 130, deliveryChargeDhakaOutside: 100, deliveryChargeExpress: 60,
+      freeDelivery: false,
     },
     saving: false,
     success: '',
@@ -266,6 +267,7 @@ function settingsPage() {
           deliveryChargeDhakaInside: CURRENT_SETTINGS.deliveryChargeDhakaInside || 130,
           deliveryChargeDhakaOutside: CURRENT_SETTINGS.deliveryChargeDhakaOutside || 100,
           deliveryChargeExpress: CURRENT_SETTINGS.deliveryChargeExpress || 60,
+          freeDelivery: CURRENT_SETTINGS.freeDelivery || false,
         };
       }
     },

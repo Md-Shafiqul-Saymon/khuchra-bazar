@@ -34,6 +34,29 @@
 
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">ডেলিভারি এরিয়া *</label>
+          <% if (settings?.freeDelivery) { %>
+          <div class="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-700 font-semibold text-sm">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            বিনামূল্যে ডেলিভারি! এখন সারা দেশে ফ্রি ডেলিভারি চলছে।
+          </div>
+          <div class="space-y-2 mt-2">
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'dhaka-inside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="dhaka-inside" class="text-rose-600">
+              <span>ঢাকার বাইরে <span class="text-emerald-600 font-semibold">(ফ্রি)</span></span>
+            </label>
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'dhaka-outside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="dhaka-outside" class="text-rose-600">
+              <span>ঢাকার বাইরে (সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) <span class="text-emerald-600 font-semibold">(ফ্রি)</span></span>
+            </label>
+            <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
+              :class="form.deliveryArea === 'express' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
+              <input type="radio" x-model="form.deliveryArea" value="express" class="text-rose-600">
+              <span>ঢাকার ভিতরে <span class="text-emerald-600 font-semibold">(ফ্রি)</span></span>
+            </label>
+          </div>
+          <% } else { %>
           <div class="space-y-2">
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'dhaka-inside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
@@ -43,7 +66,7 @@
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'dhaka-outside' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
               <input type="radio" x-model="form.deliveryArea" value="dhaka-outside" class="text-rose-600">
-              <span>ঢাকার বাইরে( সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) (<%= settings?.deliveryChargeDhakaOutside || 100 %> Tk)</span>
+              <span>ঢাকার বাইরে (সাভার, কেরানীগঞ্জ, গাজীপুর, নারায়ণগঞ্জ) (<%= settings?.deliveryChargeDhakaOutside || 100 %> Tk)</span>
             </label>
             <label class="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition"
               :class="form.deliveryArea === 'express' ? 'border-rose-500 bg-rose-50' : 'border-gray-200'">
@@ -51,6 +74,7 @@
               <span>ঢাকার ভিতরে (<%= settings?.deliveryChargeExpress || 60 %> Tk)</span>
             </label>
           </div>
+          <% } %>
         </div>
       </div>
     </div>
@@ -88,7 +112,14 @@
 
         <div class="space-y-2 text-sm mb-4">
           <div class="flex justify-between"><span>সাবটোটাল</span><span class="font-medium text-rose-600">৳ <%= cart.subtotal %></span></div>
-          <div class="flex justify-between"><span>ডেলিভারি চার্জ</span><span class="font-medium" x-text="'৳ ' + deliveryCharge"></span></div>
+          <div class="flex justify-between">
+            <span>ডেলিভারি চার্জ</span>
+            <% if (settings?.freeDelivery) { %>
+            <span class="font-semibold text-emerald-600">ফ্রি</span>
+            <% } else { %>
+            <span class="font-medium" x-text="'৳ ' + deliveryCharge"></span>
+            <% } %>
+          </div>
           <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2">
             <span>মোট</span>
             <span class="text-rose-600" x-text="'৳ ' + (<%= cart.subtotal %> + deliveryCharge)"></span>
@@ -110,7 +141,10 @@
 </div>
 
 <script>
-  const DELIVERY_CHARGES = {
+  const FREE_DELIVERY = <%= settings?.freeDelivery ? 'true' : 'false' %>;
+  const DELIVERY_CHARGES = FREE_DELIVERY ? {
+    'dhaka-inside': 0, 'dhaka-outside': 0, 'express': 0,
+  } : {
     'dhaka-inside':  <%= settings?.deliveryChargeDhakaInside || 130 %>,
     'dhaka-outside': <%= settings?.deliveryChargeDhakaOutside || 100 %>,
     'express':       <%= settings?.deliveryChargeExpress || 60 %>,
